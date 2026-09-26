@@ -84,9 +84,12 @@ jobs:
                  WHERE table_schema='dialysis' AND table_type='BASE TABLE' AND table_name<>'migrations'),
               (SELECT COUNT(*) FROM information_schema.views    WHERE table_schema='dialysis'),
               (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema='dialysis');")
-          echo "baseline tables / views / triggers: $counts"
-          [ "$counts" = "$(printf '66\t12\t6')" ] || {
-            echo "::error::expected 66 baseline tables, 12 views, 6 triggers; got $counts"
+          # 68 = the baseline's 66 plus the two tables migrated after it
+          # (personal_access_tokens, monthly_quality_summaries). A new migration
+          # that creates a table raises this number.
+          echo "tables / views / triggers: $counts"
+          [ "$counts" = "$(printf '68\t12\t6')" ] || {
+            echo "::error::expected 68 tables (66 baseline + 2 migrated), 12 views, 6 triggers; got $counts"
             exit 1
           }
 

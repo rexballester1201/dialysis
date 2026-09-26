@@ -422,6 +422,9 @@ The bedside PWA is the reason this project succeeds or fails. Protocol details i
 - Delete `claim_sessions` rows to free a session. The only release is voiding a claim
   that never reached the payer, which writes each row to `audit_logs` first. Freeing the
   sessions of a claim the payer holds is how one treatment gets paid twice.
+- Remove `config.platform.php` (`8.2.0`) from `apps/api/composer.json`. The development
+  machine runs PHP 8.4; without the pin, `composer update` locks Symfony 8, which needs
+  PHP 8.4.1, and the vendor then dies on the 8.2 and 8.3 hosts the pre-flight accepts.
 
 ---
 

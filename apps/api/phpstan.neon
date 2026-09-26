@@ -1,0 +1,19 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+
+    # Production code. tests/ is deliberately out of scope: Pest's closures are
+    # rebound to a TestCase at runtime, so every `$this->postJson(...)` reads as a
+    # call on PHPUnit\Framework\TestCase and the real findings drown in noise.
+    # The tests are proven by running them.
+    paths:
+        - app
+        - database
+        - routes
+
+    # verify/ is a deliberately framework-free script that talks to PDO directly.
+    # It is proven by running it (16 passed, 0 failed), not by static analysis.
+    excludePaths:
+        - verify/*

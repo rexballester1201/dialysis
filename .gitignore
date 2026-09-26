@@ -1,0 +1,39 @@
+# ---- never commit ----------------------------------------------------------
+# A .env holds the database credentials for a system full of patient records.
+.env
+.env.*
+!.env.example
+
+# Nor a dump that might contain a real patient.
+*.sql.gz
+*.dump
+/backups/
+
+# ---- dependencies ----------------------------------------------------------
+node_modules/
+/apps/api/vendor/
+
+# ---- build output ----------------------------------------------------------
+dist/
+/apps/api/public/build/
+/apps/api/public/hot
+
+# ---- local artefacts -------------------------------------------------------
+/apps/api/storage/*.key
+/apps/api/.phpunit.result.cache
+/apps/api/.phpunit.cache/
+/apps/api/database/*.sqlite
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# ---- per-installation credentials ------------------------------------------
+# Written by deploy/accounts/make-accounts.php together with the plaintext
+# credentials sheet (itself ignored in deploy/accounts/). Each installation
+# generates its own, so nobody else ever holds its passwords and PINs.
+/deploy/sql/04-accounts.sql
+
+# ---- local tooling -----------------------------------------------------------
+/.claude/

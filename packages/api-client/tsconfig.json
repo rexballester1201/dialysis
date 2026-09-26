@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    // DOM, because this is the browser HTTP client: it uses fetch and Headers.
+    // packages/domain deliberately does NOT include DOM -- it is pure maths and
+    // must stay usable anywhere, including server-side.
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "types": []
+  },
+  "include": ["src/**/*.ts"]
+}

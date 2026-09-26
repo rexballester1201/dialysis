@@ -1,0 +1,886 @@
+/*
+ * Console.
+ *
+ * A desk tool, not a bedside one: mouse and keyboard, dense tables, more on
+ * screen at once. It shares the clinical palette with the bedside app so the two
+ * read as one system, but none of the 44px touch sizing — a clerk reconciling
+ * claims wants rows, not buttons the size of a thumb.
+ */
+
+:root {
+  --paper: #f4f6f5;
+  --surface: #ffffff;
+  --surface-2: #eaefed;
+  --ink: #16221f;
+  --muted: #5c6b67;
+  --faint: #7e8c88;
+  --rule: #d7dfdc;
+  --accent: #0e6b5e;
+  --accent-ink: #ffffff;
+  --accent-wash: #e4f0ed;
+
+  --danger: #9c2f26;
+  --danger-wash: #f7e9e7;
+  --warn: #9a6410;
+  --warn-wash: #f8efde;
+  --ok: #2f6b3a;
+  --ok-wash: #e7f0e8;
+
+  --nav-w: 208px;
+  --radius: 5px;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ---- shell ------------------------------------------------------------- */
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--nav-w) 1fr;
+  min-height: 100%;
+}
+
+@media (max-width: 820px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nav {
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.nav .brand {
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0 10px 14px;
+  letter-spacing: -0.01em;
+}
+
+.nav button {
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.nav button:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.nav button[aria-current='page'] {
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav .whoami {
+  margin-top: auto;
+  padding: 12px 10px 0;
+  border-top: 1px solid var(--rule);
+  font-size: 0.83rem;
+  color: var(--faint);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.main {
+  padding: 22px 26px 60px;
+  min-width: 0;
+  max-width: 1180px;
+}
+
+.pagehead {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.subtle {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0 0 20px;
+}
+
+/* ---- panels ------------------------------------------------------------ */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.panel > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel > header h2 {
+  font-size: 0.76rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 600;
+}
+
+.panel > header .grow {
+  flex: 1;
+}
+
+.panelbody {
+  padding: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* ---- tables ------------------------------------------------------------ */
+
+.tablewrap {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.93rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+th {
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 600;
+  background: var(--surface-2);
+}
+
+td.num,
+th.num {
+  text-align: right;
+}
+
+tbody tr:hover {
+  background: var(--surface-2);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tr.clickable {
+  cursor: pointer;
+}
+
+.wrapcell {
+  white-space: normal;
+  min-width: 18rem;
+}
+
+/* ---- chips ------------------------------------------------------------- */
+
+.chip {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip-quiet {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.chip-ok {
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+
+.chip-warn {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.chip-danger {
+  background: var(--danger-wash);
+  color: var(--danger);
+}
+
+/* Cohort never relies on colour alone; the label is always rendered. */
+.chip-clean {
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+
+.chip-hbv {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.chip-hcv {
+  background: #ece7f5;
+  color: #543b8c;
+}
+
+/* ---- stats ------------------------------------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.stat {
+  background: var(--surface);
+  padding: 12px 15px;
+}
+
+.stat .label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 3px;
+}
+
+.stat .value {
+  font-size: 1.42rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.stat .value.bad {
+  color: var(--danger);
+}
+
+.stat .value.good {
+  color: var(--ok);
+}
+
+/* ---- forms ------------------------------------------------------------- */
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 600;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  padding: 7px 10px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  min-width: 0;
+}
+
+textarea {
+  min-height: 4rem;
+  resize: vertical;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 14px;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 7px 14px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-quiet {
+  background: var(--surface);
+  border-color: var(--rule);
+  color: var(--ink);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  padding: 4px 2px;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+/* ---- messages ---------------------------------------------------------- */
+
+.problem,
+.notice,
+.good {
+  padding: 10px 13px;
+  border-radius: 4px;
+  font-size: 0.92rem;
+  margin: 0 0 14px;
+}
+
+.problem {
+  background: var(--danger-wash);
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.notice {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.good {
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+
+.empty {
+  padding: 20px 14px;
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ---- sign-in ----------------------------------------------------------- */
+
+.signin {
+  max-width: 24rem;
+  margin: 9vh auto;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.signin h1 {
+  font-size: 1.2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---- settings: consequences -------------------------------------------- */
+/*
+ * Every setting on that page changes something downstream, and they are not
+ * equally dangerous. The three tones encode a real distinction rather than a
+ * decorative one:
+ *
+ *   safety  changes what the system will let a nurse do to a patient
+ *   money   changes what gets billed, or to whom
+ *   info    organisational or display only
+ *
+ * A person scanning the page should be able to see which is which before
+ * reading a word.
+ */
+
+.consequence {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  padding: 11px 14px;
+  border-radius: 4px;
+  border-left: 3px solid;
+  font-size: 0.9rem;
+  margin: 0 0 14px;
+}
+
+.consequence .what {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding-top: 2px;
+  white-space: nowrap;
+}
+
+.consequence p {
+  margin: 0 0 7px;
+}
+
+.consequence p:last-child {
+  margin-bottom: 0;
+}
+
+.consequence strong {
+  font-weight: 700;
+}
+
+.consequence-safety {
+  background: var(--danger-wash);
+  border-left-color: var(--danger);
+  color: var(--danger);
+}
+
+.consequence-money {
+  background: var(--warn-wash);
+  border-left-color: var(--warn);
+  color: var(--warn);
+}
+
+.consequence-info {
+  background: var(--surface-2);
+  border-left-color: var(--faint);
+  color: var(--muted);
+}
+
+/* Cohort pickers sit inline in a table row and must stay tappable. */
+.cohortpick {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.cohortpick label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cohortpick input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.unrestricted {
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.rolepick {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rolepick label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rolepick input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.switch input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--danger);
+}
+
+/* ---- billing ----------------------------------------------------------- */
+
+/* Choosing a patient for a claim or an invoice. */
+.picker {
+  position: relative;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pickresults {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--surface);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.pickresults button {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  font-weight: 400;
+}
+
+.pickresults button:hover,
+.pickresults button:focus-visible {
+  background: var(--accent-wash);
+}
+
+.picked {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: 7px 0;
+}
+
+.checkcell {
+  width: 36px;
+}
+
+.checkcell input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  vertical-align: middle;
+}
+
+/* One tab per benefit period: a claim is built from one at a time. */
+.grouptabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+
+.grouptabs button {
+  font-variant-numeric: tabular-nums;
+}
+
+.programfacts {
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--surface-2);
+  border-radius: 4px;
+}
+
+.programfacts .field span {
+  font-size: 0.92rem;
+}
+
+.unclaimable {
+  margin-top: 16px;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+
+.unclaimable h3 {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--danger);
+}
+
+.unclaimable ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 0.92rem;
+}
+
+/* Dates and references under a claim's next step. */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px 16px;
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+.facts dt {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 2px;
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pager {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-link.inline {
+  padding: 0;
+  font-size: inherit;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 14px;
+}
+
+.segmented label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.segmented input {
+  accent-color: var(--accent);
+}
+
+.segmented input:disabled + * ,
+.segmented label:has(input:disabled) {
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.prewrap {
+  white-space: pre-wrap;
+  font-size: 0.92rem;
+}
+
+td.refund {
+  color: var(--danger);
+}
+
+.small {
+  font-size: 0.8rem;
+}
+
+/* ---- water ------------------------------------------------------------- */
+
+/* The one answer the morning needs: may the first treatment start? */
+.clearance {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  border: 1px solid transparent;
+}
+
+.clearance strong {
+  font-size: 1.08rem;
+}
+
+.clearance.is-clear {
+  background: var(--ok-wash);
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 25%, transparent);
+}
+
+.clearance.is-blocked {
+  background: var(--danger-wash);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 25%, transparent);
+}
+
+.fixedvalue {
+  padding: 7px 0;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--faint);
+}
+
+.hint-bad {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+input.breach {
+  border-color: var(--danger);
+  background: var(--danger-wash);
+}
+
+fieldset.readings {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin: 14px 0 0;
+  padding: 10px 12px 12px;
+}
+
+fieldset.readings legend {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 600;
+  padding: 0 6px;
+}
+
+.field.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+td.breachcell {
+  color: var(--danger);
+  background: var(--danger-wash);
+}
+
+.clearance.is-warn {
+  background: var(--warn-wash);
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 25%, transparent);
+}
+
+/*
+ * Units keep their case inside uppercase labels. Uppercasing "µS/cm" gives
+ * "ΜS/CM" -- a Greek capital mu that reads as mS/cm, a unit a thousand times
+ * larger, on a water-quality reading.
+ */
+.unit {
+  text-transform: none;
+  letter-spacing: 0;
+}

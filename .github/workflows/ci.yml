@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (PHP ${{ matrix.php }}, MySQL 8.0)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4']
+
+    services:
+      mysql:
+        # 8.0 is the line the schema was validated against. The invariants are
+        # triggers, stored generated columns and CHECK constraints, so the server
+        # version is part of what is under test -- not an implementation detail.
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: dialysis
+        # Published on 3308 so phpunit.xml needs no CI-specific overrides.
+        ports:
+          - 3308:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_mysql, mbstring, bcmath, intl, zip, gd
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ matrix.php }}-${{ hashFiles('apps/api/composer.lock') }}
+
+      - name: Install dependencies
+        working-directory: apps/api
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        working-directory: apps/api
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Create databases
+        run: |
+          mysql -h 127.0.0.1 -P 3308 -u root -e "
+            CREATE DATABASE IF NOT EXISTS dialysis      CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+            CREATE DATABASE IF NOT EXISTS dialysis_test CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+
+      # ---- Gate 1: the baseline loads and the object counts are right --------
+      - name: Migrate (loads the baseline schema)
+        working-directory: apps/api
+        run: php artisan migrate --no-interaction
+
+      - name: Assert schema object counts
+        run: |
+          set -euo pipefail
+          counts=$(mysql -h 127.0.0.1 -P 3308 -u root -N -B -e "
+            SELECT
+              (SELECT COUNT(*) FROM information_schema.tables
+                 WHERE table_schema='dialysis' AND table_type='BASE TABLE' AND table_name<>'migrations'),
+              (SELECT COUNT(*) FROM information_schema.views    WHERE table_schema='dialysis'),
+              (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema='dialysis');")
+          echo "baseline tables / views / triggers: $counts"
+          [ "$counts" = "$(printf '66\t12\t6')" ] || {
+            echo "::error::expected 66 baseline tables, 12 views, 6 triggers; got $counts"
+            exit 1
+          }
+
+      - name: Seed reference data
+        working-directory: apps/api
+        run: php artisan db:seed --no-interaction
+
+      # ---- Gate 2: the database invariants hold on a fresh database ----------
+      # A fresh one: the smoke test loads fixtures and is not idempotent.
+      - name: Database invariants (smoke test + sync verifier)
+        working-directory: apps/api
+        run: |
+          set -euo pipefail
+          M="mysql -h 127.0.0.1 -P 3308 -u root"
+          $M -e "DROP DATABASE IF EXISTS dialysis; CREATE DATABASE dialysis CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+          $M < database/schema/mysql-schema.sql
+          $M < database/mysql-seed.sql
+          $M < database/mysql-smoke-test.sql | tee smoke.out
+          passes=$(grep -c '^PASS' smoke.out || true)
+          fails=$(grep -c '^FAIL' smoke.out || true)
+          echo "smoke test: $passes PASS, $fails FAIL"
+          [ "$passes" = "5" ] && [ "$fails" = "0" ] || { echo "::error::smoke test expected 5 PASS / 0 FAIL"; exit 1; }
+          php verify/verify_sync.php | tee verify.out
+          grep -q '16 passed, 0 failed' verify.out || { echo "::error::verify_sync expected 16 passed, 0 failed"; exit 1; }
+
+      # ---- Gates 3 and 4: the suite, on MySQL ---------------------------------
+      - name: Tests
+        working-directory: apps/api
+        run: php artisan test
+
+      - name: Pint
+        working-directory: apps/api
+        run: ./vendor/bin/pint --test
+
+      - name: PHPStan
+        working-directory: apps/api
+        run: ./vendor/bin/phpstan analyse --no-progress
+
+  clients:
+    name: Clients (typecheck)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Covers both client tsconfigs: apps/bedside checks tsconfig.json and
+      # tsconfig.worker.json (the service worker is compiled separately).
+      - name: tsc --noEmit (all workspaces)
+        run: npm run typecheck
+
+      # packages/domain holds the Kt/V and URR maths the bedside tablet uses. The
+      # server has its own implementation in PHP; both are pinned to the same
+      # worked example so they cannot drift apart.
+      - name: Unit tests (shared domain maths)
+        run: npm test

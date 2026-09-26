@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="Requirements, sizing, installation on cPanel without a shell, pre-handover verification, hardening, upgrade, rollback and moving hosts.">
+<title>Deployment guide · DG·1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "DG·1 · Deployment guide · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html" aria-current="page"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">DG·1</span> Deployment guide</p><h1>Deploying to cPanel without a shell</h1><p class="standfirst">For a single dialysis unit on shared hosting, where the only tools are the
+cPanel control panel, File Manager and phpMyAdmin.</p><dl class="control"><div><dt>Reference</dt><dd>DG·1</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>Whoever installs, upgrades or moves the system — IT support with cPanel access.</dd></div><div><dt>Applies to</dt><dd>Shared hosting with cPanel and no shell, MySQL 8.0.16 or newer; notes for hosts with a shell.</dd></div><div><dt>Source</dt><dd><code>deploy/DEPLOYMENT.md</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#what-is-in-this-folder">What is in this folder</a></li><li><a href="#requirements">Requirements</a></li><li><a href="#sizing">Sizing</a></li><li><a href="#step-0-find-out-whether-the-host-runs-mysql-or-m">Step 0 — Find out whether the host runs MySQL or MariaDB</a></li><li><a href="#step-1-create-the-database-and-its-user">Step 1 — Create the database and its user</a></li><li><a href="#step-2-upload-the-application">Step 2 — Upload the application</a></li><li><a href="#step-3-set-folder-permissions">Step 3 — Set folder permissions</a></li><li><a href="#step-4-import-the-database">Step 4 — Import the database</a></li><li><a href="#step-5-configure-the-application">Step 5 — Configure the application</a></li><li><a href="#step-6-run-the-pre-flight-check">Step 6 — Run the pre-flight check</a></li><li><a href="#step-7-check-the-application-answers">Step 7 — Check the application answers</a></li><li><a href="#step-8-create-the-staff-accounts">Step 8 — Create the staff accounts</a></li><li><a href="#step-9-schedule-the-background-work">Step 9 — Schedule the background work</a></li><li><a href="#step-10-deploy-the-two-clients">Step 10 — Deploy the two clients</a></li><li><a href="#step-11-configure-the-unit-before-letting-anyone">Step 11 — Configure the unit before letting anyone treat a patient</a></li><li><a href="#step-12-final-checks">Step 12 — Final checks</a></li><li><a href="#five-minute-check-before-handover">Five-minute check before handover</a></li><li><a href="#hardening">Hardening</a></li><li><a href="#upgrading">Upgrading</a></li><li><a href="#rolling-back">Rolling back</a></li><li><a href="#moving-to-another-host">Moving to another host</a></li><li><a href="#if-you-have-a-shell">If you have a shell</a></li><li><a href="#known-limitations-of-a-shared-hosting-deployment">Known limitations of a shared-hosting deployment</a></li></ol></nav>
+<article class="doc-body">
+<p>Work through the steps in order. <strong>Step 0 can end the deployment</strong>, so do it
+before spending time on anything else.</p>
+<hr />
+<h2 id="what-is-in-this-folder">What is in this folder</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What is in this folder"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>preflight.php</code></td>
+<td>Browser-run host check. Answers &quot;will this host run it?&quot; without a shell.</td>
+</tr>
+<tr>
+<td><code>generate-key.php</code></td>
+<td>Produces an <code>APP_KEY</code>, since <code>php artisan key:generate</code> needs a shell.</td>
+</tr>
+<tr>
+<td><code>.env.production.example</code></td>
+<td>Production configuration template.</td>
+</tr>
+<tr>
+<td><code>sql/01-schema.sql</code></td>
+<td>The baseline: 66 tables, 12 views, 6 triggers.</td>
+</tr>
+<tr>
+<td><code>sql/02-post-baseline.sql</code></td>
+<td>The two tables and the one schema fix added after the baseline, plus the migration ledger.</td>
+</tr>
+<tr>
+<td><code>sql/03-seed.sql</code></td>
+<td>Reference data: roles, shifts, stations, event and medication lists.</td>
+</tr>
+<tr>
+<td><code>sql/04-accounts.sql</code></td>
+<td>The first staff accounts, with bcrypt-hashed passwords. Generated in step 8: each installation makes its own, so the repository has none.</td>
+</tr>
+<tr>
+<td><code>accounts/accounts.csv</code></td>
+<td>The staff list <code>04</code> is generated from. Real names go here.</td>
+</tr>
+<tr>
+<td><code>accounts/make-accounts.php</code></td>
+<td>Writes <code>04</code>, adds staff later, resets a password. Runs on your computer.</td>
+</tr>
+<tr>
+<td><code>accounts/CREDENTIALS.txt</code></td>
+<td>The plaintext passwords and PINs that match <code>04</code>. <strong>Never upload it.</strong></td>
+</tr>
+<tr>
+<td><code>accounts/CREDENTIALS.html</code></td>
+<td>The same, printable: a reference table and one cut-out slip per person. <strong>Never upload it.</strong></td>
+</tr>
+<tr>
+<td><code>DEPLOYMENT.html</code></td>
+<td>The installation steps (0 to 12) on one page, with tick-boxes and copy buttons. No passwords in it.</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>preflight.php</code> and <code>generate-key.php</code> are <strong>temporary diagnostics</strong>. Both refuse
+to run until you give them a secret, and both must be deleted once used.
+<code>make-accounts.php</code> and the <code>accounts/</code> folder never go to the server at all.</p>
+<hr />
+<h2 id="requirements">Requirements</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Requirements"><table>
+<thead>
+<tr>
+<th>Needs</th>
+<th>Minimum</th>
+<th>Why</th>
+<th>Checked by the pre-flight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PHP</td>
+<td>8.2</td>
+<td>Laravel 12 and <code>composer.json</code> require it</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>PHP extensions</td>
+<td><code>bcmath</code>, <code>pdo_mysql</code>, <code>mbstring</code>, <code>openssl</code>, <code>json</code>, <code>fileinfo</code>, <code>ctype</code></td>
+<td><code>bcmath</code> runs every money calculation and is not declared in <code>composer.json</code>, so nothing else notices it missing until an invoice is priced</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>MySQL 8.0.16 or newer. Never MariaDB, at any version</td>
+<td>CHECK constraints are enforced from 8.0.16; the quality view needs <code>LATERAL</code> (8.0.14)</td>
+<td>Yes — it tests CHECK and <code>LATERAL</code> directly rather than trusting the version string</td>
+</tr>
+<tr>
+<td>Database privileges</td>
+<td>ALL PRIVILEGES on the unit's own database</td>
+<td>The import creates views and triggers; without the privilege the triggers are skipped with no error</td>
+<td>Through the trigger count</td>
+</tr>
+<tr>
+<td>Web server</td>
+<td>Apache with <code>mod_rewrite</code>, honouring <code>.htaccess</code></td>
+<td>Laravel's routing, and both single-page apps</td>
+<td>No — PHP cannot see it. A 404 on <code>/api/v1/health</code> is the sign</td>
+</tr>
+<tr>
+<td>HTTPS</td>
+<td>A certificate on the domain</td>
+<td>Sign-in tokens travel in a header and are kept in the browser; the bedside app is a PWA</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Cron</td>
+<td>One entry, running every minute</td>
+<td>The twice-daily detective check and the nightly quality rollup</td>
+<td>No</td>
+</tr>
+<tr>
+<td>One origin</td>
+<td>The API and both apps served from the same domain</td>
+<td>There is no CORS configuration</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>About 160 MB for the application, 132 MB of it <code>vendor/</code>; then the database and 14 days of logs</td>
+<td></td>
+<td>No</td>
+</tr>
+<tr>
+<td>Your own computer</td>
+<td>Node.js 22 or newer to build the two apps; PHP 8.1 or newer to write staff accounts</td>
+<td>Neither build nor account tool runs on the server</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="sizing">Sizing</h2>
+<p>There has been no load test. What exists is the original design's estimate and a few measurements:</p>
+<ul>
+<li><strong>The design's estimate</strong> for a unit of 10 to 40 chairs: about 160 sessions a day and 40,000 a year; about nine observations per session, so 360,000 a year; one to two million audit rows a year; well under 20 million rows in the largest table after ten years. Its authors judged a 4-core, 16 GB server comfortable for that, with no partitioning needed before year five.</li>
+<li><strong>Measured on 26 September 2026:</strong> the application is about 160 MB on disk before any data; each built app about 0.4 MB; the development database, holding the reference data and a few dozen test records, about 4 MB.</li>
+<li><strong>On shared hosting</strong>, the job most likely to hit a resource limit is the nightly quality rebuild, which reads every session — see the CloudLinux note under <em>Known limitations</em>.</li>
+</ul>
+<hr />
+<h2 id="step-0-find-out-whether-the-host-runs-mysql-or-m">Step 0 — Find out whether the host runs MySQL or MariaDB</h2>
+<p><strong>This decides whether the deployment is possible at all.</strong></p>
+<p>In cPanel, open <strong>phpMyAdmin</strong>. The server version is shown on the front page,
+or run:</p>
+<pre tabindex="0"><code class="language-sql">SELECT VERSION();
+</code></pre>
+<ul>
+<li><strong>MySQL 8.0.16 or newer</strong> — continue to step 1. A build tag after the version is
+normal and harmless: <code>8.4.9-cll-lve</code> is CloudLinux's MySQL Governor build, still
+MySQL. What matters is the number and the absence of the word MariaDB.</li>
+<li><strong>MySQL older than 8.0.16</strong> — stop. Ask the host to move you to a newer server.
+Before 8.0.16, MySQL accepts CHECK constraints and silently ignores them: the
+schema would import cleanly with all 64 of its constraints doing nothing.</li>
+<li><strong>Anything saying MariaDB</strong> — <strong>stop.</strong></li>
+</ul>
+<h3 id="why-mariadb-is-a-full-stop">Why MariaDB is a full stop</h3>
+<p>The quality view <code>v_monthly_quality</code> uses <code>LEFT JOIN LATERAL</code>. MariaDB has never
+supported <code>LATERAL</code>, at any version, so that view cannot be created and
+<code>sql/01-schema.sql</code> will not import.</p>
+<p>This is not a formatting preference that can be worked around in an afternoon.
+Joining <code>session_events</code> directly into that aggregate instead — the obvious
+rewrite — multiplies every session row by its event count and inflates every
+number in the quality report. The <code>LATERAL</code> is there <em>because</em> that bug
+happened once already, and there is a regression test pinning it.</p>
+<p>Moving to MariaDB means rewriting and re-validating that view, plus re-checking
+16 stored generated columns and 64 <code>CHECK</code> constraints against MariaDB's
+different semantics. Treat it as a project, not a deployment step.</p>
+<p>Most cPanel hosts offer a MySQL server on request. Ask before doing anything else.</p>
+<hr />
+<h2 id="step-1-create-the-database-and-its-user">Step 1 — Create the database and its user</h2>
+<p>In cPanel → <strong>MySQL Databases</strong>:</p>
+<ol>
+<li>Create a database, e.g. <code>dialysis</code>. cPanel prefixes it with your account
+name, so the real name becomes something like <code>cpuser_dialysis</code>.</li>
+<li>Create a user, e.g. <code>dialysisapp</code>, with a long random password.</li>
+<li>Add the user to the database with <strong>ALL PRIVILEGES</strong>.</li>
+</ol>
+<p>Write down all three values — the prefixed database name, the prefixed username,
+and the password. Step 5 needs them.</p>
+<blockquote>
+<p><strong>Why all privileges:</strong> the import creates triggers and views. A user with only
+<code>SELECT</code>/<code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> will import the tables and silently skip
+the six triggers, leaving the database-level invariant backstops missing while
+everything appears to have worked.</p>
+</blockquote>
+<hr />
+<h2 id="step-2-upload-the-application">Step 2 — Upload the application</h2>
+<p>Using <strong>File Manager</strong> or FTP, upload the contents of <code>apps/api/</code> to a directory
+<strong>outside</strong> your public web root — for example <code>/home/cpuser/dialysis-api/</code>.</p>
+<p>Include the <code>vendor/</code> directory. It is roughly 135 MB and it must be uploaded,
+because <code>composer install</code> needs a shell. Upload it as a single <code>.zip</code> and
+extract with File Manager rather than transferring 15,000 files individually.</p>
+<p>Do <strong>not</strong> upload:</p>
+<ul>
+<li><code>tests/</code></li>
+<li><code>verify/</code></li>
+<li><code>.env</code> (your local one — you will create a fresh one in step 5)</li>
+<li><code>storage/framework/testing/</code></li>
+</ul>
+<h3 id="where-the-web-root-points">Where the web root points</h3>
+<p>Laravel serves from <code>public/</code>, not from the application root. Two ways to
+arrange this:</p>
+<p><strong>Preferred — repoint the document root.</strong> In cPanel → <strong>Domains</strong>, set the
+domain's document root to <code>/home/cpuser/dialysis-api/public</code>. Nothing else
+changes and the application code stays outside the web root.</p>
+<p><strong>Fallback — if your plan will not let you change the document root.</strong> Copy the
+contents of <code>public/</code> into <code>public_html/</code>, then edit <code>public_html/index.php</code> and
+change the two <code>require</code> paths to point at the application directory:</p>
+<pre tabindex="0"><code class="language-php">require __DIR__.'/../dialysis-api/vendor/autoload.php';
+$app = require_once __DIR__.'/../dialysis-api/bootstrap/app.php';
+</code></pre>
+<p>The fallback works, but everything except <code>public/</code> then sits one directory
+above a publicly served folder. Prefer the first option.</p>
+<p><code>public/.htaccess</code> is already present and correct — do not delete it. Without it
+every URL except <code>/</code> returns 404.</p>
+<hr />
+<h2 id="step-3-set-folder-permissions">Step 3 — Set folder permissions</h2>
+<p>In File Manager, set these to <strong>0755</strong> (some hosts need 0775):</p>
+<pre tabindex="0"><code>storage/framework/sessions
+storage/framework/cache
+storage/framework/views
+storage/logs
+bootstrap/cache
+</code></pre>
+<p>Sessions, cache and compiled views all use the file driver, so the application
+cannot boot without these being writable.</p>
+<hr />
+<h2 id="step-4-import-the-database">Step 4 — Import the database</h2>
+<p>In cPanel → <strong>phpMyAdmin</strong>, select your database in the left sidebar, then use
+the <strong>Import</strong> tab. Import the three files <strong>in this order</strong>:</p>
+<ol>
+<li><code>sql/01-schema.sql</code></li>
+<li><code>sql/02-post-baseline.sql</code></li>
+<li><code>sql/03-seed.sql</code></li>
+</ol>
+<p>Wait for each to finish before starting the next.</p>
+<h3 id="if-phpmyadmin-refuses-the-file-for-being-too-lar">If phpMyAdmin refuses the file for being too large</h3>
+<p><code>01-schema.sql</code> is about 88 KB, well under any normal limit. If your host caps
+uploads lower, use <strong>File Manager</strong> to upload the file into your home directory,
+then in phpMyAdmin's Import tab choose &quot;web server upload directory&quot; if offered.
+Failing that, open the file in a text editor and paste it into the <strong>SQL</strong> tab in
+two or three parts, splitting only between complete statements.</p>
+<h3 id="what-each-file-does">What each file does</h3>
+<ul>
+<li><strong>01</strong> builds the schema: 66 tables, 12 views, 6 triggers, 15 generated
+columns, 64 <code>CHECK</code> constraints. The <code>CREATE DATABASE</code> and <code>USE</code> statements
+that the developer copy carries have already been removed, because a cPanel
+MySQL user cannot create a database and yours already exists.</li>
+<li><strong>02</strong> adds three tables the baseline predates, and one schema fix. <strong><code>personal_access_tokens</code> is
+not optional</strong> — Sanctum stores every issued token there, so without it nobody
+can sign in at all. It also creates the <code>migrations</code> ledger and records all three
+migrations as applied, so that if anyone later gets shell access, <code>php artisan migrate</code> does not try to create tables that already exist. The schema fix closes a
+hole in <code>lab_results</code>: the baseline<code>s unique key used a nullable </code>timing` column,
+which MySQL ignores, so the same result could be filed twice.</li>
+<li><strong>03</strong> loads reference data: roles, the four shifts, the 20 stations with their
+infection-control designations, and the event and medication reference lists.
+Event codes are a fixed list and the API refuses an unrecognised one, so this
+file is required, not decorative.</li>
+</ul>
+<p>Safe to re-run: <strong>02</strong>, <strong>03</strong>, and <strong>04</strong> from step 8 — each adds only what is
+missing and changes nothing already there. Re-running <strong>01</strong> stops at its first
+statement (<em>Table 'facilities' already exists</em>) and changes nothing either.</p>
+<h3 id="confirm-it-worked">Confirm it worked</h3>
+<p>Run this in the phpMyAdmin <strong>SQL</strong> tab:</p>
+<pre tabindex="0"><code class="language-sql">SELECT
+  (SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE') AS tables_,
+  (SELECT COUNT(*) FROM information_schema.views
+     WHERE table_schema = DATABASE())                               AS views_,
+  (SELECT COUNT(*) FROM information_schema.triggers
+     WHERE trigger_schema = DATABASE())                             AS triggers_;
+</code></pre>
+<p>Expect <strong>69 tables, 12 views, 6 triggers</strong>. Anything less means an import
+stopped part-way — check phpMyAdmin's error output rather than continuing.</p>
+<p>Six triggers matters especially: they are the database-level half of the
+invariants that stop a locked session being edited, a high-alert drug going
+unwitnessed, and a chair being double-booked. If the count is 0, your MySQL user
+lacked the privilege to create them (step 1).</p>
+<hr />
+<h2 id="step-5-configure-the-application">Step 5 — Configure the application</h2>
+<ol>
+<li>Copy <code>.env.production.example</code> to the application root as <code>.env</code>.</li>
+<li>Fill in <code>DB_DATABASE</code>, <code>DB_USERNAME</code> and <code>DB_PASSWORD</code> from step 1.</li>
+<li>Set <code>APP_URL</code> to your real https address.</li>
+<li>Generate <code>APP_KEY</code>:
+<ul>
+<li>Edit <code>generate-key.php</code> and replace <code>CHANGE-ME-BEFORE-UPLOADING</code> with a
+long random string.</li>
+<li>Upload it next to <code>index.php</code>.</li>
+<li>Visit <code>https://your-domain/generate-key.php?key=YOUR-SECRET</code>.</li>
+<li>Paste the value, including the <code>base64:</code> prefix, into <code>APP_KEY</code>.</li>
+<li><strong>Delete <code>generate-key.php</code> from the server.</strong></li>
+</ul>
+</li>
+</ol>
+<p>Generate the key once and keep a copy. Nothing in the system encrypts data with
+it today — passwords are bcrypt hashes and sign-in tokens are stored as SHA-256
+hashes — so changing it signs nobody out. But anything added later that encrypts
+with it would become unreadable under a new key.</p>
+<p>Leave <code>APP_DEBUG=false</code>. With debug on, any 500 response renders a stack trace
+containing this file's contents — database password included — to whoever
+triggered it.</p>
+<hr />
+<h2 id="step-6-run-the-pre-flight-check">Step 6 — Run the pre-flight check</h2>
+<ol>
+<li>Edit <code>preflight.php</code> and set <code>SECRET</code> to a long random string.</li>
+<li>Upload it next to <code>index.php</code>.</li>
+<li>Visit <code>https://your-domain/preflight.php?key=YOUR-SECRET</code>.</li>
+</ol>
+<p>It checks the PHP version, the extensions, folder permissions, the <code>.env</code>
+values, the database connection, MySQL-versus-MariaDB, that CHECK constraints are
+actually enforced, <code>LATERAL</code> and window function support, the table/view/trigger
+counts, whether anyone can actually sign in yet, and that a water system is on
+file for the morning check.</p>
+<p><strong>Read the <em>Unit timezone</em> line against the wall clock.</strong> It shows the time on
+the unit's own clock. The system counts the unit's day in that zone — which day a
+water check clears, the date the board opens on, when stock expires — so if the
+time shown is wrong, the day boundary is wrong. Fix it in Settings (step 11).</p>
+<p><strong><code>bcmath</code> deserves attention.</strong> It runs every money calculation in the system
+and is not declared in <code>composer.json</code>, so its absence is not caught at install
+time — it surfaces as a fatal error the first time somebody prices an invoice.
+If the pre-flight reports it missing, enable it in cPanel → <strong>Select PHP
+Version</strong> → <em>Extensions</em>.</p>
+<p>Resolve every <strong>FAIL</strong> before continuing. The two about administrators and
+passwords will still fail at this point — step 8 fixes them. After step 8,
+<em>Starter accounts renamed</em> stays a warning until every placeholder name has been
+replaced by a real person's. Then <strong>delete <code>preflight.php</code> from the server.</strong></p>
+<hr />
+<h2 id="step-7-check-the-application-answers">Step 7 — Check the application answers</h2>
+<p>Visit:</p>
+<pre tabindex="0"><code>https://your-domain/api/v1/health
+</code></pre>
+<p>You should get JSON reporting <code>database: ok</code>, the table/view/trigger counts, and
+<code>redis: not_configured</code>. That last one is expected and correct — Redis is not
+installed, and the endpoint says so rather than pretending.</p>
+<p>If you get a 404 here but the domain's root works, <code>mod_rewrite</code> is not active
+or <code>public/.htaccess</code> did not upload. If you get a 500, look in
+<code>storage/logs/laravel.log</code> through File Manager.</p>
+<hr />
+<h2 id="step-8-create-the-staff-accounts">Step 8 — Create the staff accounts</h2>
+<p>There is no registration screen, by design — and, until one is built, <strong>no
+screen that creates a staff member, sets a password or sets a bedside PIN.</strong> The
+console's <strong>Settings</strong> page can grant and remove roles, but only on accounts that
+already exist. So accounts go in as SQL, and <code>accounts/make-accounts.php</code> writes
+that SQL on your own computer. It never runs on the server.</p>
+<h3 id="8a-put-the-real-people-s-names-on-the-accounts-f">8a. Put the real people's names on the accounts first</h3>
+<p><code>accounts/accounts.csv</code> starts with seven placeholder accounts, one for each
+role the system checks:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: 8a. Put the real people&#039;s names on the accounts first"><table>
+<thead>
+<tr>
+<th>Sign in</th>
+<th>Name on the account</th>
+<th>Role</th>
+<th>Bedside PIN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ADM-001</code></td>
+<td>Site Administrator</td>
+<td><code>admin</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>ENC-001</code></td>
+<td>Records Encoder</td>
+<td><code>records</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>BIL-001</code></td>
+<td>Billing Officer</td>
+<td><code>billing</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>TEC-001</code></td>
+<td>Renal Technician</td>
+<td><code>technician</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>HN-001</code></td>
+<td>Head Nurse</td>
+<td><code>head_nurse</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>RN-001</code></td>
+<td>Dialysis Nurse</td>
+<td><code>nurse</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>NEP-001</code></td>
+<td>Attending Nephrologist</td>
+<td><code>nephrologist</code></td>
+<td>yes</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Each account belongs to one person, never to a role.</strong> The name on it is the
+name printed on every record it signs — a countersignature by &quot;Attending
+Nephrologist&quot; attributes a legal attestation to nobody — and the high-alert
+witness check means nothing if two nurses share one sign-in.</p>
+<p>So first open <code>accounts/accounts.csv</code>, replace each placeholder with the person
+who will hold that account (and their PRC licence number where it applies), add
+a row for anyone else who needs one, and on a computer with PHP 8.1 or newer run:</p>
+<pre tabindex="0"><code class="language-bash">php deploy/accounts/make-accounts.php
+</code></pre>
+<p>It writes <code>sql/04-accounts.sql</code> and the two credentials sheets. The repository
+ships no <code>04-accounts.sql</code>: every installation generates its own, so nobody else
+holds its passwords. To regenerate, add <code>--force</code>, and only while nothing has
+been imported anywhere — it prints new passwords. The script refuses a bad row
+and names the problem.</p>
+<h3 id="8b-import-it">8b. Import it</h3>
+<p>In phpMyAdmin, import <code>sql/04-accounts.sql</code> exactly as in step 4. It creates an
+account only if no account already has that employee number or email, and never
+changes an existing one, so importing it twice is harmless and it can never
+reset a live password.</p>
+<h3 id="8c-hand-out-the-sign-in-details-then-destroy-the">8c. Hand out the sign-in details, then destroy the sheet</h3>
+<p><code>accounts/CREDENTIALS.txt</code> holds each account's password and, for the bedside
+roles, a six-digit PIN; <code>accounts/CREDENTIALS.html</code> is the same, laid out to print
+with one cut-out slip per person. <strong>Neither goes to the server</strong>, into email or
+into a shared folder. Give each person only their own slip, in person; keep the
+reference table somewhere locked or in a password manager; then delete both
+files. The pre-flight fails if it finds either on the server.</p>
+<p>Staff sign in with their employee number (or email, if one is set). On a bedside
+tablet the PIN works once that person has signed in on that tablet with their
+password.</p>
+<p>Re-run the pre-flight: <em>Administrator exists</em> and <em>Staff who can sign in</em> now
+pass. Then delete it.</p>
+<h3 id="renaming-an-account-after-import">Renaming an account after import</h3>
+<p>In phpMyAdmin's SQL tab:</p>
+<pre tabindex="0"><code class="language-sql">UPDATE staff
+   SET first_name = 'Maria', last_name = 'Reyes', licence_no = 'PRC-0123456'
+ WHERE employee_no = 'NEP-001';
+</code></pre>
+<p><strong>Only before the account has signed anything.</strong> Records point at the account,
+not at a copy of the name, so renaming it later rewrites the name on everything
+it already signed. For the same reason an account is never passed on to someone
+else — give the new person their own.</p>
+<h3 id="adding-staff-later">Adding staff later</h3>
+<p>Append their row to <code>accounts/accounts.csv</code> and generate only that row:</p>
+<pre tabindex="0"><code class="language-bash">php deploy/accounts/make-accounts.php RN-002
+</code></pre>
+<p>That writes <code>accounts/out/add-accounts-&lt;time&gt;.sql</code> and a matching credentials
+sheet. Import, hand out, destroy — as above. Roles can then be adjusted from
+<strong>Settings → Staff and roles</strong>.</p>
+<h3 id="resetting-a-password">Resetting a password</h3>
+<p>Nobody can change their own password in the app yet. An administrator does it:</p>
+<pre tabindex="0"><code class="language-bash">php deploy/accounts/make-accounts.php --reset RN-001
+</code></pre>
+<p>That writes <code>accounts/out/reset-&lt;time&gt;.sql</code>: a new password (and a new PIN for a
+bedside role), the lockout cleared, and every device the account was signed in
+on signed out — so whoever may have learned the old password is out too.
+phpMyAdmin should report one row affected by each <code>UPDATE</code>; zero means no active
+account has that employee number.</p>
+<h3 id="what-each-role-is-for">What each role is for</h3>
+<p>Roles are not seniority tiers:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What each role is for"><table>
+<thead>
+<tr>
+<th>Role</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>admin</code></td>
+<td>Opening Settings and granting roles; can also do most of what the others do</td>
+</tr>
+<tr>
+<td><code>records</code></td>
+<td>Registering patients and correcting demographics — the unit's encoder</td>
+</tr>
+<tr>
+<td><code>billing</code></td>
+<td>Claims, remittances, invoices and payments</td>
+</tr>
+<tr>
+<td><code>technician</code></td>
+<td>Water tests and dialyzer reprocessing</td>
+</tr>
+<tr>
+<td><code>head_nurse</code></td>
+<td>Everything a nurse does, plus registering patients and ordering labs</td>
+</tr>
+<tr>
+<td><code>nurse</code></td>
+<td>Running treatments at the chair and charting them; signing as the delivering nurse</td>
+</tr>
+<tr>
+<td><code>nephrologist</code></td>
+<td>Countersigning and amending treatment records; prescribing; ordering labs</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>dietitian</code> and <code>readonly</code> exist in the role list, but nothing checks them yet —
+an account holding only those can sign in and do nothing.</p>
+<p><strong>A unit with no nephrologist cannot close a single treatment record</strong> — sessions
+will run and never lock, and nothing can be billed.</p>
+<p>The system will stop the last administrator removing their own admin role, since
+there would be no way back in short of database access.</p>
+<hr />
+<h2 id="step-9-schedule-the-background-work">Step 9 — Schedule the background work</h2>
+<p>Two commands must run on a schedule:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Step 9 — Schedule the background work"><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>When (UTC)</th>
+<th>In Manila</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dialysis:check-controls</code></td>
+<td>06:00 and 18:00</td>
+<td>14:00 and 02:00</td>
+<td>Reads the three detective views and exits non-zero while anything is outstanding.</td>
+</tr>
+<tr>
+<td><code>dialysis:summarise-quality</code></td>
+<td>02:30</td>
+<td>10:30</td>
+<td>Rebuilds the monthly quality rollup the quality report reads.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The times are UTC because the application's clock is fixed to UTC — the unit's
+timezone setting moves the unit's <em>day</em>, not the schedule. The twice-daily check
+was meant to run before the morning shift is seated; as built it does not, so
+until the schedule follows the unit's timezone, someone opens the console's
+<strong>Controls</strong> screen each morning before the first patient.</p>
+<p>Both are wired into Laravel's scheduler, so cPanel only needs one cron entry. In
+cPanel → <strong>Cron Jobs</strong>, add a job running <strong>every minute</strong>:</p>
+<pre tabindex="0"><code class="language-bash">cd /home/cpuser/dialysis-api &amp;&amp; /usr/local/bin/php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1
+</code></pre>
+<p>Adjust the path to PHP — cPanel's Cron Jobs page usually shows the correct
+binary, and it is often a version-specific path like <code>/usr/local/bin/ea-php84</code>.</p>
+<p><strong>Do not skip this.</strong> <code>check-controls</code> is what makes the detective controls into
+controls: cohort breaches, water exceptions and dialyzer failures that got in
+through an import or a direct edit are found here and nowhere else. Wire its
+failure output to something that reaches a person — a cron email address is
+enough to start with.</p>
+<p>If the plan genuinely offers no cron at all, the unit must read the console's
+<strong>Controls</strong> screen twice a day by standing instruction, and the quality
+report will stay empty. Write that down as a known operational gap rather
+than discovering it later.</p>
+<hr />
+<h2 id="step-10-deploy-the-two-clients">Step 10 — Deploy the two clients</h2>
+<p>Both are static builds. On a machine with Node:</p>
+<pre tabindex="0"><code class="language-bash">npm install
+npm run build -w @dialysis/bedside
+npm run build -w @dialysis/console
+</code></pre>
+<p>Upload the contents of each <code>dist/</code> folder:</p>
+<ul>
+<li><code>apps/bedside/dist/</code> → the bedside tablets' URL</li>
+<li><code>apps/console/dist/</code> → the console's URL</li>
+</ul>
+<p><strong>Both must be served from the same origin as the API.</strong> They call <code>/api/v1</code>
+with relative URLs and there is no CORS configuration, so serving them from a
+different subdomain breaks every request with no useful error. Put them in
+subfolders of the same domain — for example <code>/bedside</code> and <code>/console</code> — or
+configure CORS before splitting them.</p>
+<p>Each folder needs its own <code>.htaccess</code> so the SPA loads:</p>
+<pre tabindex="0"><code class="language-apache">&lt;IfModule mod_rewrite.c&gt;
+  RewriteEngine On
+  RewriteBase /bedside/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . index.html [L]
+&lt;/IfModule&gt;
+</code></pre>
+<p>Serve everything over <strong>HTTPS</strong>. Both clients hold their API token in
+<code>localStorage</code>, and the bedside app is a PWA — service workers do not run over
+plain HTTP.</p>
+<h3 id="what-each-client-currently-covers">What each client currently covers</h3>
+<p>Worth knowing before training anyone, so nobody goes hunting for a screen that
+is not there.</p>
+<p><strong>Bedside</strong> — sign in (password, then PIN for the rest of the shift), today's
+board from the local cache, check-in, start and end (online only, because that is
+where the water, chair, machine and dialyzer checks run), and the flow sheet:
+observations with prefill from the previous row, intra-dialytic events, offline
+queueing with a visible outbox count, and conflict reporting. It does <strong>not</strong> do
+signing or medication administration.</p>
+<p><strong>Console</strong> — daily board with generate-from-standing-patterns, the <strong>Water</strong>
+screen (the morning chlorine check the first treatment waits for), patient
+registry and chart with bloods, session view with countersignature, claims
+(generated per benefit period, moved through the payer's statuses, remittances
+keyed), invoices (drafted, issued, payments and refunds taken, voided), the
+Controls screen, and settings. It does <strong>not</strong> yet do machine logs, stock,
+staff accounts, or the quality and utilisation reports.</p>
+<p><strong>The Water screen is the first thing each morning.</strong> Until a passing
+total-chlorine reading is recorded there, the day's first <strong>Start</strong> at the chair
+is refused — by design. The technician, a head nurse or an administrator can
+record it; everyone else can see whether the unit is cleared. It needs a water
+system on file (<code>03-seed.sql</code> adds one, <em>RO Unit A</em>; rename it in the database
+to match yours).</p>
+<hr />
+<h2 id="step-11-configure-the-unit-before-letting-anyone">Step 11 — Configure the unit before letting anyone treat a patient</h2>
+<p>Open the console's <strong>Settings</strong> page as the administrator. Every setting there
+explains its own consequence inline; these are the ones that must be right
+before go-live.</p>
+<h3 id="chairs-and-infection-control">Chairs and infection control</h3>
+<p>The seed ships 20 stations with designations that match a plausible unit, not
+yours. <strong>Check every one against the actual room.</strong></p>
+<p>A chair with <strong>no cohorts ticked is unrestricted, not unusable</strong> — the system
+will seat any patient in it, including an HBV-positive patient in a chair staff
+think of as clean. That is the opposite of what the empty state reads like, so
+the page asks for a written reason before it will let you clear the last one.</p>
+<h3 id="high-alert-medications">High-alert medications</h3>
+<p>A drug flagged high-alert cannot be given without a witness, and the witness may
+not be the person giving it. Check the flagged list against your own policy —
+unflagging one removes that second check entirely.</p>
+<h3 id="benefit-programme">Benefit programme</h3>
+<p><strong>Verify the case rate and the annual session allotment against the current
+PhilHealth circular.</strong> The seed carries ₱6,350 and 156 sessions per calendar
+year; both have changed before — the rate went ₱2,600 → ₱4,000 → ₱6,350 and the
+allotment 90 → 156 — and both will change again.</p>
+<p>Rates are added, never edited. Adding one closes the current one and leaves it on
+file so past claims still price against what applied then. Each version needs its
+own code. The Settings page shows the programmes in force but has no form to add
+one yet: a new rate is an API call by an administrator, set out step by step in
+the administrator's guide (<code>docs/admin-guide.html</code>, &quot;Changing the benefit rate&quot;).</p>
+<p>The seed carries only the 2023 rate (to 1 July 2024) and the current one (from
+9 October 2024). A session dated in between cannot be claimed until a programme
+covering those dates is added.</p>
+<h3 id="facility">Facility</h3>
+<p><strong>Set the timezone to where the unit actually is</strong> (the seed has <code>Asia/Manila</code>).
+It is not only for display: it is where the unit's day begins and ends. It
+decides which day a water check counts for — so whether the morning's first
+treatment may start — which date the board and the bedside tablets open on, and
+the moment stock passes its expiry date. Every timestamp is still stored in UTC,
+so changing it moves no recorded time; it changes which calendar day that time
+falls on.</p>
+<p>The currency is display only. It converts nothing.</p>
+<hr />
+<h2 id="step-12-final-checks">Step 12 — Final checks</h2>
+<p>Work through this against the live installation:</p>
+<ul>
+<li><input disabled="" type="checkbox"> The technician can record a water check on the <strong>Water</strong> screen, the
+screen then shows <em>Cleared to dialyse today</em>, and a nurse can start the
+day's first treatment — times on that screen match the wall clock</li>
+<li><input disabled="" type="checkbox"> <code>/api/v1/health</code> reports <code>database: ok</code>, 69 tables, 12 views, 6 triggers</li>
+<li><input disabled="" type="checkbox"> <code>preflight.php</code> and <code>generate-key.php</code> are <strong>deleted from the server</strong></li>
+<li><input disabled="" type="checkbox"> No credentials sheet is on the server, and the local copy has been destroyed
+once everyone had their entry</li>
+<li><input disabled="" type="checkbox"> Every account carries the name of the one person who holds it (the
+pre-flight showed no <em>Starter accounts renamed</em> warning)</li>
+<li><input disabled="" type="checkbox"> <code>APP_DEBUG=false</code>, confirmed by triggering a 404 and seeing no stack trace</li>
+<li><input disabled="" type="checkbox"> The administrator can sign in to the console</li>
+<li><input disabled="" type="checkbox"> At least one nephrologist exists, or no record can ever be signed</li>
+<li><input disabled="" type="checkbox"> Chair cohorts in Settings match the actual rooms</li>
+<li><input disabled="" type="checkbox"> The benefit case rate and allotment match the current circular</li>
+<li><input disabled="" type="checkbox"> The daily board loads and <strong>Generate from standing patterns</strong> works</li>
+<li><input disabled="" type="checkbox"> A nurse account can sign in on a bedside tablet, lock it, unlock it with the
+PIN, and open a flow sheet</li>
+<li><input disabled="" type="checkbox"> Charting an observation offline, then reconnecting, lands the row on the server</li>
+<li><input disabled="" type="checkbox"> The <strong>Controls</strong> screen loads and reads 0 outstanding</li>
+<li><input disabled="" type="checkbox"> Cron has fired at least once (check <code>storage/logs/</code>)</li>
+<li><input disabled="" type="checkbox"> A database backup has been taken <strong>and restored somewhere</strong> to prove it works</li>
+<li><input disabled="" type="checkbox"> The clinical thresholds have been checked against your own SOPs:
+total chlorine 0.1 ppm, Kt/V ≥ 1.2, URR ≥ 65%, dialyzer TCV floor 80%,
+UF rate concern ~13 ml/kg/h</li>
+</ul>
+<hr />
+<h2 id="five-minute-check-before-handover">Five-minute check before handover</h2>
+<p>Run this against the live installation after step 12, and again after every
+upgrade. Tick each line; anything that does not match stops the handover.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Five-minute check before handover"><table class="ticks">
+<thead>
+<tr>
+<th>#</th>
+<th>Do</th>
+<th>Expect</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Open <code>https://your-domain/api/v1/health</code></td>
+<td><code>&quot;status&quot;: &quot;ok&quot;</code>; database <code>ok</code>; schema 69 tables, 12 views, 6 triggers; migrations with 0 pending; Redis <code>not_configured</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Open <code>https://your-domain/api/v1/no-such-page</code></td>
+<td>A plain <em>Not Found</em> — no stack trace, no file paths. Proves <code>APP_DEBUG=false</code></td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Open <code>/preflight.php</code> and <code>/generate-key.php</code> on the domain</td>
+<td>Both 404: the files are gone</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Open <code>https://your-domain/.env</code></td>
+<td>404 or 403, never the file</td>
+<td></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Sign in to the console as an administrator and open <strong>Settings</strong></td>
+<td>The unit's timezone; chair cohorts that match the rooms; the current benefit rate</td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Open <strong>Water</strong></td>
+<td>A water system is offered; times on the page match the wall clock</td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Open <strong>Controls</strong></td>
+<td>It loads; on a new installation it lists nothing</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td>On a tablet: sign in as a nurse, press Lock, unlock with the PIN</td>
+<td>It unlocks, and the board shows today</td>
+<td></td>
+</tr>
+<tr>
+<td>9</td>
+<td>In phpMyAdmin: <code>SELECT employee_no, first_name, last_name FROM staff;</code></td>
+<td>Every account carries one real person's name</td>
+<td></td>
+</tr>
+<tr>
+<td>10</td>
+<td>In cPanel → <strong>Cron Jobs</strong></td>
+<td>One entry running <code>schedule:run</code> every minute, with the right paths</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="hardening">Hardening</h2>
+<p>Most of this is already in the steps above; this is the list to audit against.</p>
+<ul>
+<li><strong>Debug off, production on.</strong> <code>APP_DEBUG=false</code> and <code>APP_ENV=production</code>. The pre-flight fails without the first.</li>
+<li><strong>Code outside the web root.</strong> Point the document root at <code>public/</code> (step 2). The fallback layout works but leaves everything else one folder above a public one.</li>
+<li><strong>No diagnostics left behind.</strong> <code>preflight.php</code> and <code>generate-key.php</code> deleted; neither runs without its secret, but neither should exist.</li>
+<li><strong>HTTPS only.</strong> Most cPanel versions offer a <em>Force HTTPS Redirect</em> switch under <strong>Domains</strong>; turn it on. The apps keep their sign-in token in the browser, so plain HTTP would expose it on the unit's Wi-Fi.</li>
+<li><strong>The database account is the application's alone.</strong> It has privileges on its own database and nothing else. No person uses it day to day, and nobody holds a separate account that can write. The audit log is written by the application, so a direct SQL change never appears in it. If the host offers binary logging with <code>binlog_format=ROW</code>, turn it on: it is the independent record.</li>
+<li><strong>One account per person.</strong> Credentials sheets destroyed after hand-out; leavers deactivated the same day; roles reviewed monthly (the administrator's guide has the SQL).</li>
+<li><strong>Tablets locked down.</strong> A device passcode, the Lock button whenever the nurse leaves the chair, kept on chargers, and not used for anything else.</li>
+<li><strong>Rate limits are on</strong>: five password sign-ins a minute, ten PIN attempts, sixty sync batches. Five failures lock an account for 15 minutes.</li>
+<li><strong>Directory listing is off</strong> through Laravel's <code>public/.htaccess</code>, wherever Apache's <code>mod_negotiation</code> is loaded, as it usually is. Keep that file.</li>
+<li><strong>Backups encrypted before they leave the server</strong>, and restore-tested monthly.</li>
+<li><strong>Patch the ground.</strong> Keep the host's PHP on a supported version, and take dependency updates through a tested release rather than on the live server.</li>
+</ul>
+<h2 id="upgrading">Upgrading</h2>
+<p>A release is a new copy of <code>apps/api</code> with its <code>vendor/</code>, freshly built apps, and any
+new SQL files in <code>deploy/sql</code>. On a host with no shell:</p>
+<ol>
+<li><strong>Read the release notes</strong> for schema changes, new settings and anything to do after.</li>
+<li><strong>Choose a quiet time</strong> — after the last shift, never during a treatment. Charting on
+the tablets queues while the server is unavailable, but check-in, start and end do not.</li>
+<li><strong>Take a backup</strong> of the database, download the live <code>.env</code>, and write down which
+release is running.</li>
+<li><strong>Upload the new release beside the old one</strong>, for example
+<code>/home/cpuser/dialysis-api-2026-10-15/</code> next to <code>/home/cpuser/dialysis-api/</code>, as a
+zip extracted with File Manager. Copy the live <code>.env</code> into it, and the contents of
+<code>storage/</code> if anything was ever uploaded there. Set the folder permissions (step 3).</li>
+<li><strong>Remove any cached configuration that came with the upload:</strong> delete
+<code>bootstrap/cache/config.php</code> and any <code>bootstrap/cache/routes-*.php</code> in the new
+release. A configuration cache built on another machine carries that machine's
+settings — its database, its debug flag — and makes the server ignore <code>.env</code>.</li>
+<li><strong>Apply the release's new SQL files</strong> in phpMyAdmin, in order. They are written to be
+safe to re-run. Never re-import <code>01</code> on a live database.</li>
+<li><strong>Switch:</strong> point the document root at the new release's <code>public/</code> (cPanel →
+<strong>Domains</strong>). In the fallback layout, change the two <code>require</code> paths in
+<code>public_html/index.php</code> instead.</li>
+<li><strong>Replace the apps:</strong> upload each new <code>dist/</code> over its folder, keeping the
+<code>.htaccess</code> there.</li>
+<li><strong>Run the five-minute check</strong>, then the release's own checks.</li>
+<li><strong>Keep the old release</strong> until the unit has worked a full day on the new one.</li>
+</ol>
+<h2 id="rolling-back">Rolling back</h2>
+<p>Decide before upgrading how you would undo it. The answer depends on whether the
+release changed the database.</p>
+<ul>
+<li><strong>The release changed no database objects.</strong> Point the document root back at the
+previous release's <code>public/</code> and put the previous apps back. Nothing is lost:
+whatever was charted on the new release is in the same database the old code reads.</li>
+<li><strong>The release changed the database, and nothing clinical has been recorded since.</strong>
+Restore the pre-upgrade backup into a new, empty database, point the old release's
+<code>.env</code> at it, switch the document root back, and run the five-minute check.</li>
+<li><strong>The release changed the database, and staff have charted since.</strong> Do not restore
+over it: the backup predates those treatments, and restoring discards them. If the
+change only <em>added</em> things the old code ignores — a new table, a new nullable column —
+switch the code back and leave the database as it is. Otherwise keep the new release
+and fix forward. Every release that changes the schema must say which of the two it is.</li>
+</ul>
+<p>Either way, anything still queued on a tablet replays after the switch and is not
+duplicated, and whatever you did is written down.</p>
+<h2 id="moving-to-another-host">Moving to another host</h2>
+<ol>
+<li><strong>Qualify the new host first</strong> (step 0), and run the pre-flight there against an
+empty database before moving anything.</li>
+<li><strong>Freeze writes.</strong> Pick a quiet window after the last shift, and confirm every
+tablet's sync bar shows nothing waiting.</li>
+<li><strong>Export the whole database</strong> from the old host — structure, data, views and
+triggers — with cPanel's database backup or phpMyAdmin's Export.</li>
+<li><strong>Import it into an empty database</strong> on the new host. Do not import <code>01-schema.sql</code>
+first and the data on top: the stock trigger would add every stock movement to its
+lot a second time.</li>
+<li><strong>If the import stops on a <code>DEFINER</code> or <code>SUPER</code> error</strong> — views and triggers remember
+the database user that created them — remove the <code>DEFINER=…</code> clauses from the dump
+and import again into a fresh, empty database.</li>
+<li><strong>Verify:</strong> 69 tables, 12 views and 6 triggers; the same row counts in <code>patients</code>,
+<code>treatment_sessions</code>, <code>claims</code> and <code>audit_logs</code> as on the old host; the same balances
+in <code>stock_lots</code>.</li>
+<li><strong>Move the application</strong> as in steps 2 and 3, with the same <code>.env</code> apart from the new
+<code>DB_*</code> values, then steps 9 and 10 for cron and the apps.</li>
+<li><strong>Switch the domain</strong>, then run the five-minute check.</li>
+<li><strong>Keep the old host read-only</strong> for a week, then decommission it and securely delete
+its copy of the database.</li>
+</ol>
+<p>This procedure has not been rehearsed on a real move. Rehearse it on a copy first.</p>
+<h2 id="if-you-have-a-shell">If you have a shell</h2>
+<p>On a host with SSH, the same bundle installs faster. This route has not been
+exercised on a production server; the steps above are the tested one.</p>
+<pre tabindex="0"><code class="language-bash">cd /home/cpuser/dialysis-api                 # apps/api, uploaded as in step 2
+mysql -u cpuser_dialysisapp -p cpuser_dialysis &lt; deploy-sql/01-schema.sql
+mysql -u cpuser_dialysisapp -p cpuser_dialysis &lt; deploy-sql/02-post-baseline.sql
+mysql -u cpuser_dialysisapp -p cpuser_dialysis &lt; deploy-sql/03-seed.sql
+mysql -u cpuser_dialysisapp -p cpuser_dialysis &lt; deploy-sql/04-accounts.sql
+php artisan key:generate                      # instead of generate-key.php
+php artisan dialysis:check-controls           # expect: no outstanding violations
+</code></pre>
+<p>Here <code>deploy-sql/</code> stands for wherever you uploaded the four files; they do not belong
+inside the application folder afterwards.</p>
+<p><strong>Do not build the production database with <code>php artisan migrate</code></strong> unless the database
+is literally named <code>dialysis</code>. The baseline schema carries its own <code>CREATE DATABASE</code>
+and <code>USE dialysis;</code>, which the application strips only when running tests — so on a
+server, <code>migrate</code> would try to build the schema in a database called <code>dialysis</code>, not
+the one in <code>.env</code>. The SQL files above have those statements removed.</p>
+<p>For later upgrades with a shell, <code>php artisan down</code> before switching releases and
+<code>php artisan up</code> after; apply new SQL files the same way.</p>
+<hr />
+<h2 id="known-limitations-of-a-shared-hosting-deployment">Known limitations of a shared-hosting deployment</h2>
+<p>Say these out loud before go-live rather than discovering them afterwards.</p>
+<ul>
+<li><strong>No staff management in the app.</strong> Accounts, passwords and PINs exist only
+through SQL written by <code>accounts/make-accounts.php</code>. Nobody can change their own
+password; a reset is an administrator importing a reset file. Until a screen
+exists, the credentials sheets are the most sensitive documents in the
+deployment — treat them that way.</li>
+<li><strong>No queue worker.</strong> <code>QUEUE_CONNECTION=sync</code> means any queued job runs inside
+the web request. Nothing queues work today, so this is honest rather than a
+compromise — but it stops being true the moment someone adds a job.</li>
+<li><strong>No Redis.</strong> Cache and sessions are files on disk. Fine for one unit; it will
+not survive being load-balanced across servers.</li>
+<li><strong>The bedside service worker is not wired into the Vite build.</strong> The outbox
+still works — it is IndexedDB and survives offline — but a <em>cold</em> load with no
+network shows nothing, because the app shell itself is not cached.</li>
+<li><strong>No automated UI tests.</strong> Both clients have been driven by hand in a browser;
+neither re-verifies itself, so a regression will be found by a user.</li>
+<li><strong>CI has never run.</strong> The workflow exists but this is not a git repository.</li>
+<li><strong>Some settings are not editable in the app.</strong> Shifts, machines, and adding or
+retiring a chair all need direct database access for now. You can set an
+existing chair's cohorts from Settings, but not create one.</li>
+<li><strong>CloudLinux resource limits apply.</strong> A version tagged <code>-cll-lve</code> runs under
+CloudLinux LVE, which caps CPU, memory and I/O per account and can have MySQL
+Governor throttle or kill a query that exceeds them. Nothing here is heavy for one
+unit, with one exception: <code>dialysis:summarise-quality</code> rebuilds the monthly rollup
+from <code>v_monthly_quality</code>, a materialised view, and that is the job most likely to
+trip a limit as years of sessions accumulate. If the quality report ever goes stale,
+check the LVE faults in cPanel before suspecting the code.</li>
+<li><strong>The scheduled check runs on UTC.</strong> 06:00 and 18:00 UTC are 14:00 and 02:00 in Manila, so the check does not run before the morning shift. Open the <strong>Controls</strong> screen each morning instead.</li>
+<li><strong>One failed chlorine test keeps the check red for 90 days.</strong> The water list keeps every breach of the last 90 days, corrected or not, and <code>check-controls</code> exits non-zero while anything is listed. Look for new rows, not for a zero.</li>
+<li><strong>A new benefit rate has no form.</strong> Settings shows the programmes; adding one is an API call (the administrator's guide has it).</li>
+<li><strong>The Controls screen dates a water breach by the UTC day.</strong> A reading above
+the limit logged at 05:30 in Manila is listed there under the day before. Only
+the date shown is affected — the breach is listed either way, and the check
+that blocks treatment uses the unit's own day.</li>
+<li><strong>Backups are yours to arrange.</strong> cPanel's own backups are usually nightly and
+overwrite. These records are retained 10–15 years. Set up something with real
+retention before the first real patient is charted.</li>
+</ul>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>DG·1</span> Deployment guide · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>deploy/DEPLOYMENT.md</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

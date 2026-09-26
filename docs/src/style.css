@@ -1,0 +1,406 @@
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}

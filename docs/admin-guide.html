@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="Accounts and roles, settings, scheduled jobs, imports, audit trail, backups, routine and command reference for the Dialysis Centre System.">
+<title>Administrator&#039;s guide · AG·1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "AG·1 · Administrator's guide · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html" aria-current="page"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">AG·1</span> Administrator&#039;s guide</p><h1>Running the system day to day</h1><p class="standfirst">People and roles, the settings and why some cannot be changed from the screen, what runs on a timer, the audit trail, backups, the routine, and every command an administrator needs.</p><dl class="control"><div><dt>Reference</dt><dd>AG·1</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>The unit&#039;s system administrator.</dd></div><div><dt>Applies to</dt><dd>A live installation, deployed from deploy/ on shared hosting or from source.</dd></div><div><dt>Source</dt><dd><code>docs/src/admin-guide.md</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#responsibilities"><span class="secnum">1</span> What is yours, and what runs by itself</a></li><li><a href="#people"><span class="secnum">2</span> People and roles</a><ol><li><a href="#one-account-one-person">One account, one person</a></li><li><a href="#creating-accounts">Creating accounts</a></li><li><a href="#roles">Roles</a></li><li><a href="#renaming-an-account">Renaming an account</a></li><li><a href="#resetting-a-password">Resetting a password</a></li><li><a href="#a-locked-out-account">A locked-out account</a></li><li><a href="#someone-leaves">Someone leaves</a></li></ol></li><li><a href="#settings"><span class="secnum">3</span> Settings</a><ol><li><a href="#benefit-rate">Changing the benefit rate</a></li><li><a href="#read-only">What cannot be changed on the screen, and why</a></li></ol></li><li><a href="#jobs"><span class="secnum">4</span> What runs on a timer</a></li><li><a href="#imports"><span class="secnum">5</span> Imports</a></li><li><a href="#audit"><span class="secnum">6</span> The audit trail</a></li><li><a href="#backups"><span class="secnum">7</span> Backups are yours</a></li><li><a href="#routine"><span class="secnum">8</span> The routine</a></li><li><a href="#commands"><span class="secnum">9</span> Commands</a><ol><li><a href="#on-the-server-if-you-have-a-shell">On the server, if you have a shell</a></li><li><a href="#without-a-shell">Without a shell</a></li></ol></li></ol></nav>
+<article class="doc-body">
+<h2 id="responsibilities"><span class="secnum">1</span> What is yours, and what runs by itself</h2>
+<p>The system enforces its clinical rules on its own: nobody has to remember to refuse an HBV patient a clean chair. What it cannot do for itself is the work around it — creating accounts, keeping settings true to the room, making sure the scheduled checks run and reach a person, and keeping backups. That is the administrator's job, and this guide covers all of it.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What is yours, and what runs by itself"><table>
+<thead>
+<tr>
+<th>Yours</th>
+<th>The system's</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Creating, renaming, resetting and retiring staff accounts</td>
+<td>Refusing what a role may not do; locking an account after five failed sign-ins</td>
+</tr>
+<tr>
+<td>Granting roles</td>
+<td>Recording every role change in the audit log</td>
+</tr>
+<tr>
+<td>Keeping chair cohorts, high-alert flags, the timezone and the benefit rate true</td>
+<td>Applying them to every check-in, start, dose and claim</td>
+</tr>
+<tr>
+<td>Making sure cron runs, and that the twice-daily report reaches a person</td>
+<td>Reading the three detective controls and failing loudly when anything is outstanding</td>
+</tr>
+<tr>
+<td>Backups, and proving they restore</td>
+<td>Keeping every record — nothing clinical is ever deleted</td>
+</tr>
+<tr>
+<td>Reading the audit trail when something is questioned</td>
+<td>Writing it</td>
+</tr>
+</tbody>
+</table></div>
+<p>The console's <strong>Settings</strong> screen is open only to accounts with the <code>admin</code> role. Everything else in this guide is SQL in phpMyAdmin, a command on your own computer, or a scheduled job — each shown where it is needed, and gathered in <a href="#commands">§9</a>.</p>
+<h2 id="people"><span class="secnum">2</span> People and roles</h2>
+<h3 id="one-account-one-person">One account, one person</h3>
+<p>An account is a person, never a role. The name on it is printed on everything it signs, a countersignature by &quot;Attending Nephrologist&quot; attributes a legal attestation to nobody, and the high-alert witness check means nothing if two nurses share a sign-in. Never pass an account on: give the new person their own.</p>
+<h3 id="creating-accounts">Creating accounts</h3>
+<p>There is no screen that creates a staff member, sets a password or sets a PIN. Accounts are SQL, written on your own computer by <code>deploy/accounts/make-accounts.php</code> from the staff list in <code>deploy/accounts/accounts.csv</code>. The script needs PHP 8.1 or newer and never runs on the server.</p>
+<ol>
+<li>
+<p>Add the person's row to <code>accounts.csv</code>: employee number, names, email if any, licence number where it applies, and their roles.</p>
+</li>
+<li>
+<p>Generate only that row:</p>
+<pre tabindex="0"><code class="language-bash">php deploy/accounts/make-accounts.php RN-002
+</code></pre>
+<p>It writes <code>deploy/accounts/out/add-accounts-&lt;time&gt;.sql</code> and a credentials sheet beside it, as <code>.txt</code> and as a printable <code>.html</code> with one cut-out slip per person. It refuses a malformed row and names the problem.</p>
+</li>
+<li>
+<p>Import the <code>.sql</code> file in phpMyAdmin (Import tab). It creates an account only if no account already has that employee number or email, and never changes an existing one.</p>
+</li>
+<li>
+<p>Hand each person their own slip, in person. Then delete the sheets. They are the most sensitive files in the deployment: never upload, email or copy them to a shared folder.</p>
+</li>
+</ol>
+<p>Staff sign in with their employee number, or their email if one is set. The bedside roles also get a six-digit PIN, which works on a tablet only after that person has signed in there once with their password.</p>
+<h3 id="roles">Roles</h3>
+<p><strong>Settings → Staff and roles</strong> grants and removes roles on existing accounts; every change is written to the audit log. What each role may and may not do is in <a href="design-spec.html#roles">DS·1 §3</a>. Three things to hold on to:</p>
+<ul>
+<li><strong>A unit needs at least one <code>nephrologist</code> account.</strong> Without one, no treatment record can be countersigned, so none locks, and nothing can be claimed.</li>
+<li><strong>Give no account both <code>nurse</code> and <code>nephrologist</code>.</strong> The system separates the two signatures by role, not by person.</li>
+<li><strong>The system will not let the last administrator remove their own <code>admin</code> role</strong>, because there would be no way back in short of the database.</li>
+</ul>
+<p><code>dietitian</code> and <code>readonly</code> exist in the list, but nothing checks them yet: an account holding only those can sign in and read.</p>
+<h3 id="renaming-an-account">Renaming an account</h3>
+<p>Only before it has signed anything — records point at the account, so renaming it later rewrites the name on everything it already signed. In phpMyAdmin's SQL tab:</p>
+<pre tabindex="0"><code class="language-sql">UPDATE staff
+   SET first_name = 'Maria', last_name = 'Reyes', licence_no = 'PRC-0123456'
+ WHERE employee_no = 'NEP-001';
+</code></pre>
+<h3 id="resetting-a-password">Resetting a password</h3>
+<p>Nobody can change their own password in the app yet. The administrator does it:</p>
+<pre tabindex="0"><code class="language-bash">php deploy/accounts/make-accounts.php --reset RN-001
+</code></pre>
+<p>That writes <code>deploy/accounts/out/reset-&lt;time&gt;.sql</code> and a new sheet: a new password, a new PIN if the account had one, the lockout cleared, and every device the account was signed in on signed out — so whoever may have learned the old password is out too. Import it; phpMyAdmin should report one row affected by each <code>UPDATE</code>. Zero means no active account has that employee number.</p>
+<h3 id="a-locked-out-account">A locked-out account</h3>
+<p>Five failed sign-ins lock an account for 15 minutes, and the lock clears itself. To clear it sooner:</p>
+<pre tabindex="0"><code class="language-sql">UPDATE staff SET failed_logins = 0, locked_until = NULL WHERE employee_no = 'RN-001';
+</code></pre>
+<h3 id="someone-leaves">Someone leaves</h3>
+<p>Deactivate the account and sign it out everywhere. Never delete it — the records it signed point at it.</p>
+<pre tabindex="0"><code class="language-sql">UPDATE staff SET is_active = 0 WHERE employee_no = 'RN-001';
+
+DELETE t FROM personal_access_tokens t
+  JOIN staff s ON s.id = t.tokenable_id
+ WHERE s.employee_no = 'RN-001' AND t.tokenable_type LIKE '%Staff';
+</code></pre>
+<p>An inactive account cannot sign in or unlock with its PIN. Deleting its tokens ends the sessions already open on tablets and desks, which the deactivation alone would not.</p>
+<h2 id="settings"><span class="secnum">3</span> Settings</h2>
+<p>Each setting on the Settings screen explains its own consequence beside it. These are the ones that change what the system allows.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Settings"><table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>What it changes</th>
+<th>Check it against</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit timezone</strong></td>
+<td>Where the unit's day begins and ends: which day a water check clears, the date the board and the tablets open on, when stock passes its expiry. Stored times do not move; the day they fall on does</td>
+<td>The wall clock</td>
+</tr>
+<tr>
+<td><strong>Chair cohorts</strong></td>
+<td>Which infection-control cohorts may sit in each chair. <strong>A chair with no cohorts ticked is unrestricted, not unusable</strong> — so the screen asks for a written reason before it clears the last one</td>
+<td>The actual rooms</td>
+</tr>
+<tr>
+<td><strong>High-alert medications</strong></td>
+<td>Which drugs need a witness who is not the giver. Unflagging one removes that second check entirely</td>
+<td>Your medication policy</td>
+</tr>
+<tr>
+<td><strong>Staff roles</strong></td>
+<td>What each person can reach (<a href="#people">§2</a>)</td>
+<td>Who does what this month</td>
+</tr>
+<tr>
+<td><strong>Facility details</strong></td>
+<td>Name, legal name, licence and accreditation numbers, country, contact details, the number of stations. The currency is display only; it converts nothing</td>
+<td>Your licence</td>
+</tr>
+<tr>
+<td><strong>Benefit programmes</strong></td>
+<td>Shown, with the one in force. There is no form to add one — see below</td>
+<td>The current payer circular</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="benefit-rate">Changing the benefit rate</h3>
+<p>The case rate and the session allotment are dated rows, read at the moment a claim is generated for the date of the treatment. A rate is <strong>added, never edited</strong>: adding one closes the one in force on the new start date and keeps it, so past claims still price against what applied then. Each version needs its own code.</p>
+<p>The screen has no form for this yet, so it is an API call made by an administrator. From a computer with <code>curl</code>, sign in to get a token (use a made-up device name and the same one on both calls):</p>
+<pre tabindex="0"><code class="language-bash">curl -s https://your-domain/api/v1/auth/login \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;username&quot;: &quot;ADM-001&quot;, &quot;password&quot;: &quot;…&quot;, &quot;device_id&quot;: &quot;admin-rate-change&quot;}'
+</code></pre>
+<p>Type the password where the <code>…</code> is, and clear it from the shell's history afterwards.</p>
+<p>Then add the programme with the <code>token</code> from the answer:</p>
+<pre tabindex="0"><code class="language-bash">curl -s https://your-domain/api/v1/settings/benefit-programs \
+  -H &quot;Authorization: Bearer &lt;token&gt;&quot; -H &quot;X-Device-Id: admin-rate-change&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;payer_id&quot;: 1, &quot;code&quot;: &quot;PH_HD_2027&quot;, &quot;name&quot;: &quot;PhilHealth Haemodialysis Package (2027)&quot;,
+       &quot;modality&quot;: &quot;hd&quot;, &quot;case_rate&quot;: &quot;7000.00&quot;, &quot;sessions_per_period&quot;: 156,
+       &quot;period_kind&quot;: &quot;calendar_year&quot;, &quot;currency&quot;: &quot;PHP&quot;, &quot;no_balance_billing&quot;: true,
+       &quot;effective_from&quot;: &quot;2027-01-01&quot;, &quot;circular_ref&quot;: &quot;PhilHealth Circular …&quot;}'
+</code></pre>
+<p>The figures above only show the shape; take the real ones from the circular. <code>payer_id</code> is the payer's row id (<code>SELECT id, code FROM payers;</code>). The answer lists every programme, the old one now closed. A code already used, a start date not after the current programme's, or a <code>period_kind</code> other than <code>calendar_year</code> or <code>month</code> is refused with a sentence saying why. The change is written to the audit log. Afterwards, sign the token out with <code>POST /api/v1/auth/logout</code> using the same two headers.</p>
+<h3 id="read-only">What cannot be changed on the screen, and why</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What cannot be changed on the screen, and why"><table>
+<thead>
+<tr>
+<th>Thing</th>
+<th>How it changes today</th>
+<th>Why it is not on the screen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shifts</td>
+<td>SQL on <code>shifts</code></td>
+<td>Every standing pattern, board and session points at a shift; changing one's times rewrites the unit's day. Nobody has designed a safe change</td>
+</tr>
+<tr>
+<td>Adding or retiring a chair</td>
+<td>SQL on <code>stations</code></td>
+<td>Not built. An existing chair's cohorts are on the screen</td>
+</tr>
+<tr>
+<td>Registering a machine</td>
+<td>SQL on <code>machines</code></td>
+<td>Not built; the API records maintenance, disinfection and status for machines that exist</td>
+</tr>
+<tr>
+<td>Water systems</td>
+<td>SQL on <code>water_systems</code></td>
+<td>Not built. The seed adds one, <em>RO Unit A</em>; rename it to match yours. A unit with no active water system cannot record a check, so cannot start a treatment</td>
+</tr>
+<tr>
+<td>Event codes, lab tests and reference ranges, the medication list</td>
+<td>SQL on <code>event_refs</code>, <code>lab_test_refs</code>, <code>medication_refs</code></td>
+<td>Seeded reference data. Only the high-alert flag is on the screen. An event code must be on the list or charting it is refused</td>
+</tr>
+<tr>
+<td>Payers</td>
+<td>SQL on <code>payers</code></td>
+<td>Rarely changes; the seed carries PhilHealth, self-pay and a generic HMO</td>
+</tr>
+<tr>
+<td>Serology, patient status, demographics, prescriptions, standing patterns</td>
+<td>API only (<a href="design-spec.html#api-only">DS·1 §7</a>)</td>
+<td>Screens not built yet</td>
+</tr>
+</tbody>
+</table></div>
+<p>Any SQL change skips the services — so it skips their checks and the audit log. Write down what you changed, when and why, and run <code>dialysis:check-controls</code> (or open the Controls screen) afterwards.</p>
+<h2 id="jobs"><span class="secnum">4</span> What runs on a timer</h2>
+<p>Two commands, wired into Laravel's scheduler. The host needs one cron entry that runs the scheduler every minute:</p>
+<pre tabindex="0"><code class="language-bash">cd /home/cpuser/dialysis-api &amp;&amp; /usr/local/bin/php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1
+</code></pre>
+<p>Use your own path and the PHP binary cPanel's Cron Jobs page shows — often a version-specific one such as <code>/usr/local/bin/ea-php84</code>.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What runs on a timer"><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>When (UTC)</th>
+<th>In Manila</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dialysis:check-controls</code></td>
+<td>06:00 and 18:00</td>
+<td>14:00 and 02:00</td>
+<td>Reads the three detective views — cohort violations, dialyzer exceptions, water exceptions — prints what it finds, logs a warning, and exits non-zero while anything is outstanding</td>
+</tr>
+<tr>
+<td><code>dialysis:summarise-quality</code></td>
+<td>02:30</td>
+<td>10:30</td>
+<td>Rebuilds this month's and last month's rows in <code>monthly_quality_summaries</code> from <code>v_monthly_quality</code> — last month too, because a late signature or an amendment can change a month after it ends</td>
+</tr>
+</tbody>
+</table></div>
+<aside class="callout callout-caution"><p class="callout-label">The times are UTC, not the unit's</p><p>The application clock is fixed to UTC, so &quot;06:00&quot; is 06:00 UTC — 14:00 in Manila. The code's intention was a check before the morning shift is seated; as built it runs mid-afternoon and in the early hours. Until the schedule is moved to the unit's timezone (<a href="technical-spec.html#known-defects">TS·1 §5</a>), treat the Controls screen as the morning check: someone opens it before the first patient is seated.</p></aside>
+<p><strong>Make the failure reach a person.</strong> A non-zero exit from <code>check-controls</code> means violations are outstanding, not that the job broke — and the scheduler's output goes nowhere by default. The warning lands in the Laravel log (<code>storage/logs/laravel-YYYY-MM-DD.log</code>, kept 14 days) as <em>Detective controls found violations</em>. On cPanel, the simplest route to a person is to set the Cron Jobs page's email address and add a second entry that runs <code>php artisan dialysis:check-controls</code> directly, at a time that suits the unit and without the <code>&gt;&gt; /dev/null</code>. Cron mails whatever the command prints: a one-line all-clear, or tables of what is outstanding.</p>
+<p><strong>What &quot;outstanding&quot; means.</strong> Each list has its own window. Cohort rows are sessions from today onward, so yesterday's drop off. Dialyzer rows stay until the unit is condemned. Water rows are every breach of the last 90 days, corrected or not — so after one failed chlorine test, <code>check-controls</code> exits non-zero at every run for 90 days. Look for new rows, not for a zero.</p>
+<p><strong>Confirm they ran.</strong> The summariser's last run is <code>SELECT MAX(summarised_at) FROM monthly_quality_summaries;</code> (UTC). The check-controls warning appears in the log only when something is outstanding; a quiet log means either nothing was found or the scheduler is not running — so check the summariser's timestamp to tell the two apart.</p>
+<p>Nothing else runs unattended. There is no queue worker, no backup job and no email.</p>
+<h2 id="imports"><span class="secnum">5</span> Imports</h2>
+<p>There is no import feature. Patients are registered one at a time on the Patients screen, and lab results are filed on the patient chart.</p>
+<p>If you ever load data with SQL — a migration from a previous system, a batch of historical results — know what it skips. It bypasses every service, so none of the refusals in <a href="design-spec.html#workflow">DS·1 §6</a> run and nothing reaches the audit log. Only the database backstops apply: the six triggers, the keys and CHECK constraints, and the three detective views. So:</p>
+<ol>
+<li>Load into a copy of the database first, never straight into the live one.</li>
+<li>Keep derived columns empty and let the system compute them. Never load a Kt/V, URR or invoice total calculated elsewhere.</li>
+<li>Never insert into <code>stock_transactions</code> against lots whose balances you have already loaded: the trigger adds every movement to its lot again.</li>
+<li>Afterwards, run <code>dialysis:check-controls</code> (or open the Controls screen) and resolve everything it lists before going live.</li>
+<li>Record what was loaded, from where, by whom and when — the audit log will not.</li>
+</ol>
+<h2 id="audit"><span class="secnum">6</span> The audit trail</h2>
+<p>Five places, all written by the system and none editable through it.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The audit trail"><table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Holds</th>
+<th>Written when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>audit_logs</code></td>
+<td>Actor, action, the record, the columns changed, before and after as JSON, address, browser</td>
+<td>Any change made through the application to a patient, treatment session, prescription, medication dose, serology result, lab order or result, invoice or dialyzer unit; every settings change; every claim release on a void. Claims themselves are written by the billing ledger directly and do not appear here</td>
+</tr>
+<tr>
+<td><code>record_access_logs</code></td>
+<td>Who opened which patient's record, through which route, from where</td>
+<td>Every successful request that names a patient or a session</td>
+</tr>
+<tr>
+<td><code>login_events</code></td>
+<td>Every sign-in and PIN attempt, success or failure, with the reason</td>
+<td>Every attempt, and every token revoked for a device mismatch</td>
+</tr>
+<tr>
+<td><code>session_notes</code></td>
+<td><em>AMENDMENT</em> notes with the reason and before-and-after, and <em>INFECTION CONTROL OVERRIDE</em> notes with the breach and reason</td>
+<td>Every amendment and override</td>
+</tr>
+<tr>
+<td><code>claim_status_histories</code>, <code>sync_batches</code></td>
+<td>Every claim status with who and why — the claim's own trail; every tablet upload with its verdicts</td>
+<td>Every claim move and remittance; every sync</td>
+</tr>
+</tbody>
+</table></div>
+<p>Times are UTC, except a few columns MySQL fills by default, which use the database server's own zone (<a href="troubleshooting.html#times">TG·1 §11</a>). Useful questions, as SQL:</p>
+<pre tabindex="0"><code class="language-sql">-- Who changed this patient's record, and what did they change?
+SELECT a.occurred_at, a.actor_name, a.action, a.changed_cols, a.before_data, a.after_data
+  FROM audit_logs a JOIN patients p ON p.id = a.auditable_id
+ WHERE a.auditable_type LIKE '%Patient' AND p.mrn = 'MRN-000123'
+ ORDER BY a.occurred_at;
+
+-- Who opened this patient's chart?
+SELECT r.accessed_at, s.employee_no, s.full_name, r.context, r.ip_address
+  FROM record_access_logs r
+  JOIN patients p ON p.id = r.patient_id
+  LEFT JOIN staff s ON s.id = r.actor_id
+ WHERE p.mrn = 'MRN-000123'
+ ORDER BY r.accessed_at DESC;
+
+-- Failed sign-ins in the last seven days
+SELECT occurred_at, username, failure_reason, ip_address
+  FROM login_events
+ WHERE success = 0 AND occurred_at &gt;= UTC_TIMESTAMP() - INTERVAL 7 DAY
+ ORDER BY occurred_at DESC;
+
+-- Amendments and infection-control overrides
+SELECT n.created_at, ts.public_id AS session, p.mrn, LEFT(n.body, 240) AS note
+  FROM session_notes n
+  JOIN treatment_sessions ts ON ts.id = n.session_id
+  JOIN patients p ON p.id = ts.patient_id
+ WHERE n.body LIKE 'AMENDMENT%' OR n.body LIKE 'INFECTION CONTROL OVERRIDE%'
+ ORDER BY n.created_at DESC;
+
+-- Settings changes, and claims released by a void
+SELECT occurred_at, actor_name, action, auditable_type, before_data, after_data
+  FROM audit_logs
+ WHERE auditable_type LIKE 'table:%'
+ ORDER BY occurred_at DESC;
+</code></pre>
+<p>The audit log is written by the application, so <strong>a direct SQL change is invisible to it</strong>. That is why no person should hold a database account that can write, and why a host that offers MySQL binary logging (<code>binlog_format=ROW</code>) should have it on — the binary log records what the database did, whoever did it. Most shared hosts do not offer it.</p>
+<h2 id="backups"><span class="secnum">7</span> Backups are yours</h2>
+<p>The system makes no backups. cPanel's own are usually nightly and overwrite themselves, and these records are kept for 10 to 15 years. Arrange your own before the first real patient is charted.</p>
+<p><strong>What to keep, together:</strong> the database; the <code>.env</code> file (it holds <code>APP_KEY</code> and the database password); and <code>storage/</code> if anything has been uploaded there. Nothing is encrypted with <code>APP_KEY</code> today, so a lost key can be replaced without signing anyone out; keep it anyway, because anything added later that encrypts with it would depend on it.</p>
+<p><strong>How, on cPanel:</strong> Backup → <em>Download a MySQL Database Backup</em> gives a compressed dump of the database. phpMyAdmin's Export does the same. Whichever you use, the dump must include the views and the six triggers — check that a restored copy counts 69 tables, 12 views and 6 triggers.</p>
+<p><strong>How often:</strong> daily at least, kept off the server, encrypted before it leaves, with monthly copies kept for the retention period.</p>
+<p><strong>Prove it restores:</strong> once a month, import the latest backup into a scratch database, count the objects, count the rows in <code>patients</code>, <code>treatment_sessions</code> and <code>claims</code> against the live one, then drop the scratch database. A backup that has never been restored is a hope, not a backup.</p>
+<p><strong>Tell the health check.</strong> <code>GET /api/v1/health</code> reports the backup as <code>not_configured</code> until <code>BACKUP_STATUS_PATH</code> in <code>.env</code> names a file. Once it does, it reports that file's modification time as the last successful backup — so whatever makes your backup must touch that file only after the backup succeeded and was checked. Nothing in the application writes it.</p>
+<h2 id="routine"><span class="secnum">8</span> The routine</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The routine"><table>
+<thead>
+<tr>
+<th>When</th>
+<th>Do</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Every morning</td>
+<td>Open <strong>Controls</strong> before the first patient is seated and look for anything new</td>
+<td>The scheduled check runs at 14:00 and 02:00 Manila time, not before the shift. Water breaches stay listed for 90 days, so the list is not always empty</td>
+</tr>
+<tr>
+<td>Every morning</td>
+<td>Confirm the <strong>Water</strong> screen shows the unit cleared before the first start — the technician records it, you make sure it happened</td>
+<td>No treatment can start without it</td>
+</tr>
+<tr>
+<td>Every day</td>
+<td>Confirm last night's backup exists</td>
+<td>A missed night is found the day you need it</td>
+</tr>
+<tr>
+<td>Every week</td>
+<td>Read the failed sign-ins and lockouts (<a href="#audit">§6</a>)</td>
+<td>Repeated failures on one account are someone guessing</td>
+</tr>
+<tr>
+<td>Every week</td>
+<td>Read the week's overrides and amendments</td>
+<td>Each is a clinical decision somebody should know about</td>
+</tr>
+<tr>
+<td>Every week</td>
+<td>Search the log for <em>sync operation failed</em> and <em>Detective controls found violations</em></td>
+<td>A rejected operation is charting that did not arrive</td>
+</tr>
+<tr>
+<td>Every week</td>
+<td>Confirm <code>MAX(summarised_at)</code> is within the last day</td>
+<td>Tells you the scheduler is running</td>
+</tr>
+<tr>
+<td>Every month</td>
+<td>Restore the latest backup into a scratch database and compare counts</td>
+<td>Proves the backup</td>
+</tr>
+<tr>
+<td>Every month</td>
+<td>Review <strong>Settings → Staff and roles</strong> against the roster; deactivate leavers</td>
+<td>Access follows the job, not the history</td>
+</tr>
+<tr>
+<td>Every month</td>
+<td>Read the chart-access log for unexpected access</td>
+<td>The question a privacy regulator asks</td>
+</tr>
+<tr>
+<td>Every month</td>
+<td>Check the benefit programme in force against the current circular</td>
+<td>Rates change; claims price at whatever is on file</td>
+</tr>
+<tr>
+<td>Every year</td>
+<td>Re-check the clinical thresholds against the unit's SOPs: total chlorine 0.1 ppm, Kt/V ≥ 1.2, URR ≥ 65%, dialyzer volume floor 80%, UF-rate concern 13 mL/kg/h</td>
+<td>They are cited, not chosen by the unit</td>
+</tr>
+<tr>
+<td>Every year</td>
+<td>Rotate the database password (update <code>.env</code> in the same minute)</td>
+<td>The one credential with write access</td>
+</tr>
+<tr>
+<td>Every year</td>
+<td>In the first working week of January, check the Claims screen for December sessions</td>
+<td>Calendar-year allotments restart on 1 January</td>
+</tr>
+<tr>
+<td>Every year</td>
+<td>Confirm the host still supports the PHP version in use, and that TLS renews</td>
+<td>Hosts retire old PHP versions</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="commands"><span class="secnum">9</span> Commands</h2>
+<h3 id="on-the-server-if-you-have-a-shell">On the server, if you have a shell</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: On the server, if you have a shell"><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>php artisan dialysis:check-controls</code></td>
+<td>Reads the three detective controls. Exit 0: nothing outstanding. Exit 1: violations, printed as tables</td>
+</tr>
+<tr>
+<td><code>php artisan dialysis:check-controls --json</code></td>
+<td>The same, as JSON for a monitoring agent</td>
+</tr>
+<tr>
+<td><code>php artisan dialysis:summarise-quality</code></td>
+<td>Rebuilds this month and last in the quality rollup</td>
+</tr>
+<tr>
+<td><code>php artisan dialysis:summarise-quality --month=2026-08-01</code></td>
+<td>Rebuilds the month containing that date</td>
+</tr>
+<tr>
+<td><code>php artisan schedule:list</code></td>
+<td>Shows the schedule and the next run times</td>
+</tr>
+<tr>
+<td><code>php artisan schedule:run</code></td>
+<td>Runs whatever is due now — what cron calls every minute</td>
+</tr>
+<tr>
+<td><code>php artisan route:list</code></td>
+<td>Every route with its middleware</td>
+</tr>
+<tr>
+<td><code>php artisan migrate</code></td>
+<td>On an empty database, loads the baseline schema, then the migrations</td>
+</tr>
+<tr>
+<td><code>php artisan db:seed</code></td>
+<td>Loads the reference data; safe to re-run</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="without-a-shell">Without a shell</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Without a shell"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cron</td>
+<td>Runs <code>php artisan schedule:run</code> every minute (<a href="#jobs">§4</a>)</td>
+</tr>
+<tr>
+<td><code>make-accounts.php</code> (your computer)</td>
+<td><code>--force</code> rewrites the starter set; <code>RN-002</code> adds that row; <code>--reset RN-001</code> resets a password; <code>--render-sheet &lt;file.txt&gt;</code> reprints a sheet as HTML</td>
+</tr>
+<tr>
+<td>phpMyAdmin</td>
+<td>The SQL in <a href="#people">§2</a>, <a href="#read-only">§3</a> and <a href="#audit">§6</a>; imports of account, reset and backup files</td>
+</tr>
+<tr>
+<td><code>curl</code></td>
+<td>The API calls for work with no screen, such as <a href="#benefit-rate">adding a benefit programme</a></td>
+</tr>
+<tr>
+<td><code>GET /api/v1/health</code></td>
+<td>Database, migrations, schema counts, Redis and backup status, as JSON, with no sign-in</td>
+</tr>
+</tbody>
+</table></div>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>AG·1</span> Administrator&#039;s guide · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>docs/src/admin-guide.md</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

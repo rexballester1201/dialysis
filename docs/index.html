@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="Index of the Dialysis Centre System documentation set, the one rule the system is built around, and how to rebuild the set.">
+<title>Documentation · Dialysis Centre System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "Index · Documentation · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html" aria-current="page"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">Index</span> Documentation</p><h1>How this system is documented</h1><p class="standfirst">Nine documents for one haemodialysis unit's clinical system: what it is for, how it is built, how to use it, run it, install it, fix it, judge it and take it over. <strong>Start with the rule below; everything else follows from it.</strong></p><dl class="control"><div><dt>Reference</dt><dd>Index</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>Everyone who opens the set: staff, administrators, developers, owners.</dd></div><div><dt>Applies to</dt><dd>The system as it stood on 26 September 2026.</dd></div><div><dt>Source</dt><dd><code>docs/src/index.md</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#the-rule"><span class="secnum">1</span> The rule everything follows</a></li><li><a href="#documents"><span class="secnum">2</span> The nine documents</a></li><li><a href="#where-to-start"><span class="secnum">3</span> Where to start</a></li><li><a href="#not-in-the-set"><span class="secnum">4</span> What the set does not contain</a></li><li><a href="#numbers"><span class="secnum">5</span> The numbers in these documents</a></li><li><a href="#rebuild"><span class="secnum">6</span> How to rebuild the set</a></li><li><a href="#colophon"><span class="secnum">7</span> About this set</a></li></ol></nav>
+<article class="doc-body">
+<h2 id="the-rule"><span class="secnum">1</span> The rule everything follows</h2>
+<aside class="callout callout-rule"><p class="callout-label">The central rule</p><p>Every rule that protects a patient or a bill is checked at the moment it can still prevent harm, by the one service that owns it — and checked again by the database underneath. When a rule has to bend, it bends only through a written reason that stays on the record.</p></aside>
+<p>Real patients are dialysed against this data. A refused save with a clear reason costs a nurse a minute; a saved record with a quietly wrong number is believed for years. Every design choice in these documents comes back to that trade. In practice the rule means five things:</p>
+<ul>
+<li><strong>Before, not after.</strong> The water, the chair and machine cohort, and the dialyzer are checked at check-in and at the start of treatment — before the needle goes in. Those steps need a network connection for exactly that reason: a refusal that arrived at sync time, after the patient was dialysed, would protect nobody.</li>
+<li><strong>One owner per rule.</strong> Each rule lives in one service on the server. The console, the bedside tablet and its offline sync all pass through that service, so there is no second copy of the rule to drift. <a href="design-spec.html#principles">DS·1</a> defines the terms; <a href="technical-spec.html#engine">TS·1</a> lists every rule with its owner.</li>
+<li><strong>Checked twice.</strong> Behind each service sits a database backstop — a trigger, a key, or a view that is read twice a day — so a console command or a stray script meets the same rule the screen does.</li>
+<li><strong>The server works out what it can.</strong> Kt/V, URR, weight gain, treatment duration, invoice totals and stock balances are computed on the server from their inputs. A number sent by a device is not trusted. The one gap in this is recorded in <a href="technical-spec.html#known-defects">TS·1</a>.</li>
+<li><strong>One exception, written down.</strong> Infection control is the only rule with an override, because a unit whose only hepatitis-B chair is broken still has to dialyse the patient in front of it. The override needs a reason of at least ten characters, is written onto the chart as an <em>INFECTION CONTROL OVERRIDE</em> note and into the audit log, and is echoed back so that no screen can succeed quietly.</li>
+</ul>
+<h2 id="documents"><span class="secnum">2</span> The nine documents</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The nine documents"><table>
+<thead>
+<tr>
+<th>Ref</th>
+<th>Document</th>
+<th>Written for</th>
+<th>Open it when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Index</td>
+<td>This page</td>
+<td>Everyone</td>
+<td>You need to know where something is written</td>
+</tr>
+<tr>
+<td><a href="design-spec.html">DS·1</a></td>
+<td>Design specification</td>
+<td>Clinical lead, product owner, developers</td>
+<td>You want to know what the system is meant to do, or you plan to change what it does</td>
+</tr>
+<tr>
+<td><a href="technical-spec.html">TS·1</a></td>
+<td>Technical specification</td>
+<td>Developers</td>
+<td>You are about to read or change the code</td>
+</tr>
+<tr>
+<td><a href="users-guide.html">UG·1</a></td>
+<td>User's guide — <em>The dialysis day</em></td>
+<td>Ward staff and their trainers</td>
+<td>You are learning the treatment day, or teaching it</td>
+</tr>
+<tr>
+<td><a href="admin-guide.html">AG·1</a></td>
+<td>Administrator's guide</td>
+<td>The system administrator</td>
+<td>You look after accounts, settings, scheduled jobs and backups</td>
+</tr>
+<tr>
+<td><a href="troubleshooting.html">TG·1</a></td>
+<td>Troubleshooting guide</td>
+<td>Whoever is on call</td>
+<td>Something is refused, broken or wrong</td>
+</tr>
+<tr>
+<td><a href="deployment-guide.html">DG·1</a></td>
+<td>Deployment guide</td>
+<td>IT support with cPanel access</td>
+<td>You install, upgrade, roll back or move the system</td>
+</tr>
+<tr>
+<td><a href="marketing.html">MK·1</a></td>
+<td>Product overview</td>
+<td>Owners, medical directors, managers</td>
+<td>You are deciding whether it suits your unit</td>
+</tr>
+<tr>
+<td><a href="handover.html">HO·1</a></td>
+<td>Handover</td>
+<td>The next maintainer</td>
+<td>You are taking the system over</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="where-to-start"><span class="secnum">3</span> Where to start</h2>
+<ul>
+<li><strong>On the ward:</strong> <a href="users-guide.html">UG·1</a> end to end — it is one page, in the order of the day. Keep <a href="troubleshooting.html#sign-in">TG·1 §2</a> to hand for the messages you will meet.</li>
+<li><strong>Administering it:</strong> <a href="admin-guide.html">AG·1</a> first, then <a href="deployment-guide.html">DG·1</a> if you installed it, then <a href="troubleshooting.html">TG·1</a>.</li>
+<li><strong>Developing it:</strong> <a href="handover.html">HO·1</a>, then <a href="technical-spec.html">TS·1</a>, then <a href="design-spec.html">DS·1</a>. In the repository, <code>CLAUDE.md</code> holds the rules for changing the code and <code>technical-design.md</code> the original reasoning.</li>
+<li><strong>Deciding about it:</strong> <a href="marketing.html">MK·1</a>, then <a href="design-spec.html#scope">DS·1 §2</a> for exactly what is and is not built.</li>
+</ul>
+<h2 id="not-in-the-set"><span class="secnum">4</span> What the set does not contain</h2>
+<ul>
+<li><strong>An audit.</strong> The set was specified with room for an existing independent review of the code. None exists, so none is included — and nothing in these documents is one. They were written from the code by the people who built it; read them as a description, not as assurance.</li>
+<li><strong>The earlier FAQ.</strong> <a href="faq.html">Why It Stopped You</a> was written on 20 August 2026, before the screens existed. It is kept as it was written and sits outside the set; <a href="troubleshooting.html">TG·1</a> covers the same messages as the system behaves today.</li>
+<li><strong>The repository's own notes.</strong> <code>CLAUDE.md</code>, <code>technical-design.md</code>, <code>README.md</code> and <code>deploy/DEPLOYMENT.html</code> (a one-page install runbook with tick-boxes) stay where they are. The set draws on them and does not replace them.</li>
+</ul>
+<h2 id="numbers"><span class="secnum">5</span> The numbers in these documents</h2>
+<p>Counted from the code, the development database and test runs on 26 September 2026. Where a figure appears in another document, it came from here.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The numbers in these documents"><table>
+<thead>
+<tr>
+<th>What</th>
+<th>Count</th>
+<th>Counted with</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API routes</td>
+<td>80: 37 GET, 37 POST, 3 PATCH, 2 PUT, 1 DELETE</td>
+<td><code>php artisan route:list --json</code></td>
+</tr>
+<tr>
+<td>Tables</td>
+<td>69: 66 in the baseline schema, 3 added after it</td>
+<td><code>information_schema</code></td>
+</tr>
+<tr>
+<td>Views and triggers</td>
+<td>12 views, 6 triggers</td>
+<td><code>information_schema</code></td>
+</tr>
+<tr>
+<td>Constraints</td>
+<td>117 foreign keys, 64 CHECK constraints</td>
+<td><code>information_schema</code></td>
+</tr>
+<tr>
+<td>Indexes and generated columns</td>
+<td>238 indexes, 16 stored generated columns</td>
+<td><code>information_schema</code></td>
+</tr>
+<tr>
+<td>Server code</td>
+<td>127 PHP files, 12,501 lines in <code>apps/api/app</code></td>
+<td>file count</td>
+</tr>
+<tr>
+<td>Client code</td>
+<td>44 TypeScript files, 10,448 lines across five workspaces</td>
+<td>file count</td>
+</tr>
+<tr>
+<td>Server tests</td>
+<td>282 Pest tests, 1,309 assertions, 18 files — all passing on MySQL 8.4.9</td>
+<td><code>php artisan test</code></td>
+</tr>
+<tr>
+<td>Client tests</td>
+<td>9 Vitest tests (6 clinical maths, 3 for the confirm-dialog sweep) — all passing</td>
+<td><code>npm test</code></td>
+</tr>
+<tr>
+<td>Database checks</td>
+<td>smoke test 5 PASS / 0 FAIL; sync verifier 16 passed / 0 failed</td>
+<td>a fresh scratch database</td>
+</tr>
+<tr>
+<td>Static checks</td>
+<td>PHPStan level 8: no errors. Pint: passed. <code>tsc --noEmit</code>: five workspaces clean</td>
+<td>the tools themselves</td>
+</tr>
+</tbody>
+</table></div>
+<p>These runs were on the development machine. The continuous-integration workflow in <code>.github/workflows/ci.yml</code> has never run, because the project is not yet a git repository.</p>
+<h2 id="rebuild"><span class="secnum">6</span> How to rebuild the set</h2>
+<p>The pages are built, not written. After changing any source, rebuild from the repository root:</p>
+<pre tabindex="0"><code class="language-bash">php docs/build.php
+</code></pre>
+<p>It needs PHP 8.2 or newer and <code>apps/api/vendor</code> in place — run <code>composer install</code> in <code>apps/api</code> once — because it uses the Markdown library the API already carries. It writes all nine pages, then checks the whole set: every tag closed, every id unique, every link inside a page and between pages pointing at something that exists, no double-escaped characters, a title and doctype on every page. Any failure is listed and the command exits non-zero. To run the checks alone:</p>
+<pre tabindex="0"><code class="language-bash">php docs/build.php --check
+</code></pre>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: How to rebuild the set"><table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where it lives</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The set's order, groups and every control block</td>
+<td><code>docs/src/manifest.php</code></td>
+</tr>
+<tr>
+<td>The stylesheet, inlined into every page</td>
+<td><code>docs/src/style.css</code></td>
+</tr>
+<tr>
+<td>Index, DS·1, TS·1, AG·1, TG·1, MK·1, HO·1</td>
+<td><code>docs/src/&lt;name&gt;.md</code></td>
+</tr>
+<tr>
+<td>UG·1</td>
+<td><code>docs/src/users-guide.html</code> — the original guide's own HTML</td>
+</tr>
+<tr>
+<td>DG·1</td>
+<td><code>deploy/DEPLOYMENT.md</code> — the same file the installer reads</td>
+</tr>
+</tbody>
+</table></div>
+<aside class="callout callout-stop"><p class="callout-label">Do not edit the HTML by hand</p><p>A change made to a built page is overwritten the next time anyone builds. Until then, the page and its source disagree, and nobody can tell which one is right. Change the source, rebuild, and move the document to a new issue in the manifest if its substance changed.</p></aside>
+<p>Two conventions in the Markdown sources: a callout is a block that opens with three colons and a kind — <code>:::stop</code>, <code>:::caution</code>, <code>:::note</code> or <code>:::rule</code>, optionally followed by a label — and closes with three colons on a line of their own; and <code>{#name}</code> at the end of a heading gives it a fixed anchor that other documents can link to.</p>
+<h2 id="colophon"><span class="secnum">7</span> About this set</h2>
+<ul>
+<li><strong>Issues.</strong> Each document carries its own issue number and date. The date is the day its text was last checked against the code. A change of substance means a new issue, recorded in the manifest and described in the document.</li>
+<li><strong>Design.</strong> The set uses the palette the console and the bedside app already share: ward paper <code>#F7F8F7</code>, chart ink <code>#16221F</code>, circuit teal <code>#0E6B5E</code> as the one accent, hairlines <code>#DDE3E0</code>, and stop red <code>#9C2F26</code> and caution amber <code>#9A6410</code> kept for their meanings — <em>refused</em> and <em>tells you</em>. Titles are set in Newsreader, text in Libre Franklin, references and code in IBM Plex Mono. Pages follow the device's light or dark setting.</li>
+<li><strong>Offline.</strong> Every page opens from disk with no server and no scripts. The typefaces load from Google Fonts when there is a connection; without one, the pages fall back to the system's own faces and read the same.</li>
+<li><strong>Print.</strong> Pages print on A4. The spine and the contents are left out, tables and callouts avoid breaking across pages, and each page carries the document reference, issue and page number in its footer — Chrome and Edge print these running footers; other browsers print the document without them, and the reference still heads the first page and closes the last.</li>
+</ul>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>Index</span> Documentation · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>docs/src/index.md</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

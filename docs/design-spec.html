@@ -1,0 +1,1339 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="Scope, roles, principles, domain objects, workflow, screens and design decisions of the Dialysis Centre System.">
+<title>Design specification · DS·1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "DS·1 · Design specification · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html" aria-current="page"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">DS·1</span> Design specification</p><h1>What the system is for, and what it refuses</h1><p class="standfirst">The behaviour the system was designed to have and has today: its scope, the people it serves, the objects it keeps, the day it follows and the decisions that shaped it.</p><dl class="control"><div><dt>Reference</dt><dd>DS·1</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>The clinical lead, whoever decides what the system should do next, and developers before they change behaviour.</dd></div><div><dt>Applies to</dt><dd>Behaviour as built on 26 September 2026: the API, the bedside app and the console.</dd></div><div><dt>Source</dt><dd><code>docs/src/design-spec.md</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#rule"><span class="secnum">1</span> The rule this design serves</a></li><li><a href="#scope"><span class="secnum">2</span> Scope</a><ol><li><a href="#built">Built</a></li><li><a href="#not-built">Not built</a></li><li><a href="#excluded">Deliberately excluded</a></li><li><a href="#needs-decision">Needs a decision before it can be built</a></li></ol></li><li><a href="#roles"><span class="secnum">3</span> The people, and what each cannot do</a></li><li><a href="#principles"><span class="secnum">4</span> Principles</a></li><li><a href="#objects"><span class="secnum">5</span> What the system keeps</a></li><li><a href="#workflow"><span class="secnum">6</span> The treatment day</a><ol><li><a href="#session-states">How a session moves</a></li><li><a href="#claim-states">How a claim moves</a></li></ol></li><li><a href="#screens"><span class="secnum">7</span> Screens</a><ol><li><a href="#screens-bedside">Bedside tablet</a></li><li><a href="#screens-console">Console</a></li><li><a href="#api-only">Work the API does that no screen offers</a></li></ol></li><li><a href="#decisions"><span class="secnum">8</span> Decisions, and why</a></li><li><a href="#open-questions"><span class="secnum">9</span> Open questions</a></li><li><a href="#done"><span class="secnum">10</span> Definition of done</a></li></ol></nav>
+<article class="doc-body">
+<h2 id="rule"><span class="secnum">1</span> The rule this design serves</h2>
+<p>Every rule that protects a patient or a bill is checked at the moment it can still prevent harm, by the one service that owns it — and checked again by the database underneath. When a rule has to bend, it bends only through a written reason that stays on the record. (<a href="index.html#the-rule">Index §1</a> explains what that means in practice.)</p>
+<p>This document describes the behaviour that rule produces, as built on 26 September 2026. Where the system does less than a reader might expect, it says so; where a behaviour is a choice somebody should review, it says that too.</p>
+<h2 id="scope"><span class="secnum">2</span> Scope</h2>
+<p>The system serves <strong>one in-centre haemodialysis unit</strong> — seeded for a Philippine centre with 20 chairs, four shifts and PhilHealth as the main payer. It is not multi-site and has no notion of more than one facility.</p>
+<h3 id="built">Built</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Built"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>What exists</th>
+<th>Where it is used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registry</td>
+<td>Patients with an MRN, identifiers, contacts, coverage, diagnoses, status history, serology (which decides the infection-control cohort) and effective-dated dry weights</td>
+<td>Console registers patients, shows the chart, sets a dry weight. Serology, status changes and demographic edits exist in the API only</td>
+</tr>
+<tr>
+<td>Prescribing</td>
+<td>Haemodialysis prescriptions, versioned, exactly one active per patient</td>
+<td>Console shows them. Writing one is API-only (nephrologist)</td>
+</tr>
+<tr>
+<td>Scheduling</td>
+<td>Standing patterns (weekdays × shift × chair) and a daily board generated from them; one chair holds one patient per shift per day</td>
+<td>Console generates and shows the board. Patterns are set through the API</td>
+</tr>
+<tr>
+<td>Treatment record</td>
+<td>Check-in, start, end; flow-sheet observations and coded events; medication doses with a witness rule; nurse signature, nephrologist countersignature, lock, amendment</td>
+<td>Bedside tablet for check-in to end and the flow sheet; console for both signatures. Doses and amendments are API-only</td>
+</tr>
+<tr>
+<td>Infection control</td>
+<td>Chair cohorts, machine cohorts, cohort carried over on an undisinfected machine, the recorded override</td>
+<td>Enforced at check-in and start; chair cohorts set in Settings</td>
+</tr>
+<tr>
+<td>Water</td>
+<td>A daily total-chlorine check that gates the day's first treatment; readings kept for the trend</td>
+<td>Console, Water screen</td>
+</tr>
+<tr>
+<td>Machines and dialyzers</td>
+<td>Machine status, maintenance and disinfection logs; dialyzer reuse with volume and count limits</td>
+<td>API only — but enforced at every start</td>
+</tr>
+<tr>
+<td>Stock</td>
+<td>Receipts, first-expiry-first-out issue, refusal of quarantined and expired lots; balances moved only by movement rows</td>
+<td>API only</td>
+</tr>
+<tr>
+<td>Labs</td>
+<td>Panel orders, filed results, results history per patient</td>
+<td>Console, patient chart</td>
+</tr>
+<tr>
+<td>Billing</td>
+<td>Claims per benefit period with allotment counting, the payer's status lifecycle and remittance; invoices with issue, payments, refunds and void</td>
+<td>Console, Claims and Invoices</td>
+</tr>
+<tr>
+<td>Reporting</td>
+<td>The three detective controls, a nightly monthly-quality rollup, station utilisation</td>
+<td>Console shows the detective controls. Quality and utilisation are API-only</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Facility details including its timezone, chair cohorts, high-alert medication flags, staff roles; benefit programmes (added, never edited)</td>
+<td>Console, Settings — which shows benefit programmes but has no form to add one</td>
+</tr>
+<tr>
+<td>Offline charting</td>
+<td>An outbox on the tablet, idempotent batch upload, one transaction per operation, conflicts reported rather than resolved silently</td>
+<td>Bedside tablet</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td>Before-and-after of changes to nine record types and every settings change (claims are traced by their status history instead), every chart view, every sign-in attempt, every sync batch</td>
+<td>No screen; read with SQL (<a href="admin-guide.html#audit">AG·1 §6</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="not-built">Not built</h3>
+<p>These are gaps, not refusals. Each is a natural next step, and none has a half-finished implementation waiting.</p>
+<ul>
+<li><strong>Staff accounts in the app.</strong> Nothing creates a staff member, sets a password or a PIN, or lets anyone change their own password. Accounts come from SQL written by <code>deploy/accounts/make-accounts.php</code> (<a href="admin-guide.html#people">AG·1 §2</a>).</li>
+<li><strong>Screens for work the API already does:</strong> serology, patient status and demographic edits, prescriptions, standing patterns, amendments, medication doses, machines, dialyzer reprocessing, stock, and the quality and utilisation reports.</li>
+<li><strong>One-off scheduling.</strong> An add-on session, a reschedule or a cancelled day has no endpoint; <code>extra_session</code> schedule exceptions are ignored.</li>
+<li><strong>Changing a chair after check-in.</strong> The start step takes no chair and there is no reassign endpoint.</li>
+<li><strong>Lab maintenance.</strong> No reference-range editor and no result amendment. URR is not derived from a filed pair of BUN results.</li>
+<li><strong>Payer disputes.</strong> No appeal or resubmission of a denied claim as a new one, no clawbacks, no write-offs.</li>
+<li><strong>Other benefit periods.</strong> Only <code>calendar_year</code> and <code>month</code>; <code>rolling_year</code> and <code>lifetime</code> are refused.</li>
+<li><strong>Tablet comforts.</strong> The service worker is not in the build (the bedside app cannot start from cold without a network), there is no idle auto-lock (a nurse locks the tablet with the Lock button) and no screen wake lock.</li>
+<li><strong>Real time and queues.</strong> No live board updates, no wall display, no Redis or Horizon.</li>
+<li><strong>Integrations.</strong> No payer transmission, lab import, scales, dialysis-machine link, registry export or patient portal.</li>
+</ul>
+<h3 id="excluded">Deliberately excluded</h3>
+<ul>
+<li><strong>Hard deletion</strong> of a patient, a treatment session, or any audit row. Retiring a patient is a soft delete.</li>
+<li><strong>Any override other than infection control.</strong> The other rules have no clinical situation that requires bypassing them.</li>
+<li><strong>MariaDB.</strong> It has no <code>LATERAL</code> join, which the quality view depends on, and its CHECK and generated-column behaviour differ.</li>
+<li><strong>Trusting a derived number from a device.</strong> Covered in <a href="#principles">§4</a>.</li>
+</ul>
+<h3 id="needs-decision">Needs a decision before it can be built</h3>
+<ul>
+<li>The senior-citizen and PWD 20% discount, and how it meets a no-balance-billing package.</li>
+<li>What <code>session_no_lifetime</code> counts — sessions here, or everywhere the patient has dialysed.</li>
+<li>The anchor date for rolling-year and lifetime benefit periods.</li>
+<li>Whether peritoneal dialysis belongs in scope; the modality values exist, the workflow does not.</li>
+<li>The questions in <a href="#open-questions">§9</a>.</li>
+</ul>
+<h2 id="roles"><span class="secnum">3</span> The people, and what each cannot do</h2>
+<p>Nine roles are seeded; seven are checked by the code. A staff member can hold several. Roles are not seniority tiers — each opens a different set of doors.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The people, and what each cannot do"><table>
+<thead>
+<tr>
+<th>Role</th>
+<th>For</th>
+<th>Cannot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nephrologist</code></td>
+<td>Prescribing; charting; countersigning; amending a locked record; ordering labs</td>
+<td>Generate the board or set standing patterns; register a patient; record water, machine or stock work; sign as the delivering nurse; bill; change settings</td>
+</tr>
+<tr>
+<td><code>head_nurse</code></td>
+<td>The board and standing patterns; registering patients; charting and signing as the delivering nurse; the water log, machines, stock and dialyzer reprocessing; ordering labs</td>
+<td>Countersign, amend, prescribe, bill, change settings, or edit a closed chart</td>
+</tr>
+<tr>
+<td><code>nurse</code></td>
+<td>The board and standing patterns; check-in to end and the flow sheet; signing as the delivering nurse; editing an open chart</td>
+<td>Register a patient, countersign, amend, prescribe, order labs, record water or machine work, bill, change settings</td>
+</tr>
+<tr>
+<td><code>technician</code></td>
+<td>The water log, machine maintenance and disinfection, stock, dialyzer reprocessing</td>
+<td>Chart, edit any patient record, bill, change settings</td>
+</tr>
+<tr>
+<td><code>billing</code></td>
+<td>Claims, remittances, invoices, payments and refunds</td>
+<td>Chart, edit patients, record water or machine work, change settings</td>
+</tr>
+<tr>
+<td><code>records</code></td>
+<td>Registering patients; correcting demographics, including on a closed chart</td>
+<td>Chart, sign, bill, record water, change settings</td>
+</tr>
+<tr>
+<td><code>admin</code></td>
+<td>Settings and roles; registration; the board and patterns; water, machines and stock; billing; retiring a patient</td>
+<td>Chart, check in, start or end, sign, countersign, amend, prescribe</td>
+</tr>
+<tr>
+<td><code>dietitian</code></td>
+<td>Nothing yet — no feature checks this role</td>
+<td>Any write</td>
+</tr>
+<tr>
+<td><code>readonly</code></td>
+<td>Reading the clinical record, the board and the reports</td>
+<td>Any write; reading claims or invoices</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two things apply to everyone. <strong>Every active account can read every patient's chart</strong>, and every such read is logged with who, when and through which route (<a href="admin-guide.html#audit">AG·1 §6</a>). And <strong>a closed chart</strong> — deceased, transferred out, transplanted, recovered function, lost to follow-up, discontinued — can be edited only by <code>records</code> and <code>admin</code>.</p>
+<aside class="callout callout-caution"><p class="callout-label">Choices a clinical lead should review</p><ul>
+<li><strong>Signatures are separated by role, not by person.</strong> The nurse signature needs <code>nurse</code> or <code>head_nurse</code>; the countersignature needs <code>nephrologist</code>. Nothing compares the two signers, so an account holding both roles could sign both. Give no account both.</li>
+<li><strong>Dry weight, serology and lab results ride on the chart-edit permission.</strong> On an open chart, <code>records</code>, <code>nurse</code>, <code>head_nurse</code>, <code>nephrologist</code> and <code>admin</code> can all set a new dry weight, and its reason is optional. Serology decides the cohort, so the same five roles can change which chairs a patient may use.</li>
+<li><strong>Nurses can build the board and set standing patterns</strong>, not only head nurses.</li>
+<li><strong>A unit with no nephrologist account cannot lock a single record</strong>, and an unlocked record cannot be claimed.</li>
+</ul></aside>
+<p>Each role also puts <em>abilities</em> on the sign-in token (<code>admin</code>, <code>billing</code>, <code>bedside</code>). Nothing checks them; every route authorises through the role-based policies above. They are a label, not a control.</p>
+<h2 id="principles"><span class="secnum">4</span> Principles</h2>
+<p>These words mean exactly this throughout the set.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Principles"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Invariant</strong></td>
+<td>A rule with a clinical or financial consequence, enforced in two layers: the service that owns it, which refuses with a reason and leaves an audit trail, and a database backstop — a trigger, a key, or a detective view — that survives console commands, imports and stray scripts. There are twelve (<a href="technical-spec.html#engine">TS·1 §5</a>).</td>
+</tr>
+<tr>
+<td><strong>Preventive control</strong></td>
+<td>A check made at the moment it can still stop harm: the water before the day's first start, the cohort at check-in and again at start, the dialyzer when it is issued.</td>
+</tr>
+<tr>
+<td><strong>Detective control</strong></td>
+<td>A database view that finds violations that arrived another way — an import, a direct edit, a recorded override. Three exist, for cohorts, dialyzers and water. They are read twice a day by <code>dialysis:check-controls</code> and shown on the Controls screen. A detective control nobody reads is not a control.</td>
+</tr>
+<tr>
+<td><strong>Derived value</strong></td>
+<td>Anything the server can compute from inputs it holds: Kt/V and URR from the BUN samples, interdialytic weight gain, weight lost, actual duration, invoice balances and line totals, stock balances. The server computes and stores it; a device's copy is not trusted.</td>
+</tr>
+<tr>
+<td><strong>Measurement</strong></td>
+<td>A reading from an instrument, such as a machine's online-clearance Kt/V. Kept exactly as recorded, even where a derivation exists.</td>
+</tr>
+<tr>
+<td><strong>Override</strong></td>
+<td>An explicit, reasoned, recorded exception. Exactly one exists: infection control. It needs a reason of at least ten characters, becomes an <em>INFECTION CONTROL OVERRIDE</em> note on the chart and an audit row, and is echoed in the response.</td>
+</tr>
+<tr>
+<td><strong>Effective-dated</strong></td>
+<td>Changed by adding a new dated version, never by overwriting: dry weights, prescriptions, standing patterns, benefit programmes. Old versions stay, so an old record re-reads the way it was true at the time.</td>
+</tr>
+<tr>
+<td><strong>Snapshot</strong></td>
+<td>A value copied onto a record at the moment it applied. The dry weight and the prescription in force are copied onto the session at check-in, so revising either later does not rewrite past treatments.</td>
+</tr>
+<tr>
+<td><strong>Locked record</strong></td>
+<td>A treatment session with both signatures. Its clinical fields change only by amendment — a nephrologist, a reason, the before-and-after in the audit log, a note on the chart. The billing link stays writable, because claims are attached after signing.</td>
+</tr>
+<tr>
+<td><strong>Append-only</strong></td>
+<td>The flow sheet adds rows and never edits them. Each observation is keyed by session and time, so two devices cannot collide, and a correction is a new row at the real time.</td>
+</tr>
+<tr>
+<td><strong>Online-only step</strong></td>
+<td>Check-in, start and end are refused offline, because the checks they carry are only worth anything before the needle goes in. Charting is not; it queues.</td>
+</tr>
+<tr>
+<td><strong>Fail loudly</strong></td>
+<td>A refused save that names what is wrong is preferred to a saved record with a quietly defaulted field.</td>
+</tr>
+<tr>
+<td><strong>The unit's day</strong></td>
+<td>The calendar day in the facility's timezone. Every time is stored in UTC; which day an instant belongs to — for the water check, the board, stock expiry — is decided by <code>facilities.timezone</code>.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="objects"><span class="secnum">5</span> What the system keeps</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What the system keeps"><table>
+<thead>
+<tr>
+<th>Object</th>
+<th>What it is</th>
+<th>Stored in</th>
+<th>The rule that matters most</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Patient</td>
+<td>A person in the unit's care, with an MRN and a public ULID</td>
+<td><code>patients</code>, plus identifiers, contacts, coverages, status history, diagnoses, consents, allergies</td>
+<td>Never hard-deleted; status is a history, not a field</td>
+</tr>
+<tr>
+<td>Cohort</td>
+<td>Clean, HBV or HCV, derived from current serology</td>
+<td><code>serology_results</code>, read through <code>v_patient_cohort</code></td>
+<td>Decides which chairs and machines the patient may use</td>
+</tr>
+<tr>
+<td>Dry weight</td>
+<td>The target post-dialysis weight</td>
+<td><code>dry_weights</code></td>
+<td>Effective-dated; snapshotted onto the session at check-in</td>
+</tr>
+<tr>
+<td>Prescription</td>
+<td>The treatment ordered</td>
+<td><code>hd_prescriptions</code></td>
+<td>Exactly one active per patient</td>
+</tr>
+<tr>
+<td>Standing pattern</td>
+<td>Weekdays, shift and chair</td>
+<td><code>standing_schedules</code></td>
+<td>No overlapping patterns for one patient</td>
+</tr>
+<tr>
+<td>Treatment session</td>
+<td>One treatment: 95 columns that mirror the paper flow sheet</td>
+<td><code>treatment_sessions</code></td>
+<td>Moves through a fixed state machine; locked once both have signed</td>
+</tr>
+<tr>
+<td>Observation</td>
+<td>An intra-dialytic set of vitals</td>
+<td><code>session_vitals</code></td>
+<td>Append-only, one per session per time</td>
+</tr>
+<tr>
+<td>Event</td>
+<td>A coded complication</td>
+<td><code>session_events</code>, codes from <code>event_refs</code></td>
+<td>The code must be on the list</td>
+</tr>
+<tr>
+<td>Medication dose</td>
+<td>A dose given, or recorded as not given with a reason</td>
+<td><code>medication_administrations</code></td>
+<td>A high-alert drug needs a witness who is not the giver</td>
+</tr>
+<tr>
+<td>Session note</td>
+<td>Free text on the record</td>
+<td><code>session_notes</code></td>
+<td>Where overrides and amendments are written</td>
+</tr>
+<tr>
+<td>Station</td>
+<td>A chair; isolation chairs carry cohorts</td>
+<td><code>stations</code>, <code>station_cohorts</code></td>
+<td>A chair with no cohorts is unrestricted, not unusable</td>
+</tr>
+<tr>
+<td>Machine</td>
+<td>A dialysis machine with its logs</td>
+<td><code>machines</code>, maintenance and disinfection logs</td>
+<td>Must be in service or standby; must be disinfected between cohorts</td>
+</tr>
+<tr>
+<td>Dialyzer unit</td>
+<td>One physical, reprocessed dialyzer</td>
+<td><code>dialyzer_units</code>, <code>dialyzer_reprocess_logs</code></td>
+<td>This patient's own, at least 80% of its original volume, within its reuse count</td>
+</tr>
+<tr>
+<td>Water check</td>
+<td>A day's total chlorine and other readings</td>
+<td><code>water_daily_logs</code>, <code>water_systems</code>, <code>water_quality_tests</code></td>
+<td>Above 0.1 ppm, or no reading, blocks the day's first start</td>
+</tr>
+<tr>
+<td>Stock lot</td>
+<td>A batch of an item on the shelf</td>
+<td><code>items</code>, <code>stock_lots</code>, <code>stock_transactions</code>, <code>suppliers</code></td>
+<td>Its balance moves only through a movement row</td>
+</tr>
+<tr>
+<td>Lab result</td>
+<td>A filed result for a test</td>
+<td><code>lab_orders</code>, <code>lab_results</code>, <code>lab_test_refs</code></td>
+<td>One result per patient, test, specimen date and timing</td>
+</tr>
+<tr>
+<td>Benefit programme</td>
+<td>A payer's case rate and allotment, dated</td>
+<td><code>payers</code>, <code>benefit_programs</code></td>
+<td>Added, never edited</td>
+</tr>
+<tr>
+<td>Benefit period</td>
+<td>A patient's allotment window under a programme</td>
+<td><code>benefit_periods</code></td>
+<td>Claimed sessions are counted against it</td>
+</tr>
+<tr>
+<td>Claim</td>
+<td>What the payer is asked for</td>
+<td><code>claims</code>, <code>claim_sessions</code>, <code>claim_status_histories</code>, <code>claim_attachments</code></td>
+<td>A session is billed at most once</td>
+</tr>
+<tr>
+<td>Invoice</td>
+<td>What is left for the patient</td>
+<td><code>invoices</code>, <code>invoice_lines</code>, <code>payments</code>, <code>service_items</code></td>
+<td>Balances and line totals are computed by the database</td>
+</tr>
+<tr>
+<td>Audit record</td>
+<td>The before-and-after of a change</td>
+<td><code>audit_logs</code></td>
+<td>Never deleted</td>
+</tr>
+<tr>
+<td>Chart view</td>
+<td>Who opened whose record</td>
+<td><code>record_access_logs</code></td>
+<td>Written for every successful patient-scoped request</td>
+</tr>
+<tr>
+<td>Sync batch</td>
+<td>One upload from a tablet</td>
+<td><code>sync_batches</code></td>
+<td>A replay returns the stored answer, byte for byte</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="workflow"><span class="secnum">6</span> The treatment day</h2>
+<p>The steps are a real sequence: the record cannot skip one. &quot;Refused when&quot; lists what the owning service checks, in the order it checks it.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The treatment day"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Step</th>
+<th>Who</th>
+<th>Where</th>
+<th>Refused when</th>
+<th>Recorded</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Water check</td>
+<td>technician, head nurse, admin</td>
+<td>Console, Water</td>
+<td>The reading is timed in the future; a reading over the limit has no action written</td>
+<td>The readings, the shift, who; clears the unit's day</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Generate the board</td>
+<td>head nurse, nurse, admin</td>
+<td>Console, Daily board</td>
+<td>— (a clash was refused when the pattern was set)</td>
+<td>One session per patient for the date, from the patterns</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Check in</td>
+<td>nurse, head nurse, nephrologist</td>
+<td>Bedside, online</td>
+<td>Wrong status; machine not usable; chair or machine against the cohort, with no override</td>
+<td>Pre-dialysis weight and observations, chair, machine; dry weight and prescription snapshotted; any override note</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Start</td>
+<td>nurse, head nurse, nephrologist</td>
+<td>Bedside, online</td>
+<td>Wrong status; no pre-dialysis weight; water not cleared; machine not usable; cohort breach, with no override; dialyzer refused</td>
+<td>Start time, delivered settings, the dialyzer unit issued</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Chart</td>
+<td>nurse, head nurse, nephrologist</td>
+<td>Bedside, offline allowed</td>
+<td>The record is locked; an observation already exists at that time; unknown event code; high-alert dose without a separate witness</td>
+<td>Observations, events, doses</td>
+</tr>
+<tr>
+<td>5</td>
+<td>End</td>
+<td>nurse, head nurse, nephrologist</td>
+<td>Bedside, online</td>
+<td>Wrong status</td>
+<td>Post-dialysis values; Kt/V and URR computed; <em>completed</em>, or <em>aborted</em> with a reason</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Sign</td>
+<td>nurse, head nurse</td>
+<td>Console, session</td>
+<td>Already locked; weights, times or primary nurse missing — named</td>
+<td>The nurse signature</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Countersign</td>
+<td>nephrologist</td>
+<td>Console, session</td>
+<td>Already locked</td>
+<td>The countersignature; the record locks when both are in</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Amend</td>
+<td>nephrologist</td>
+<td>API only</td>
+<td>Not locked; no reason; a protected field</td>
+<td>The change, a note on the chart, the before-and-after in the audit log</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Claim</td>
+<td>billing, admin</td>
+<td>Console, Claims</td>
+<td>Not signed; not billable; not completed; already on a claim; another patient's; no programme in force; mixes programmes or benefit periods; more sessions than the allotment has left</td>
+<td>A draft claim, priced from the programme, each session numbered in the period</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Payer lifecycle</td>
+<td>billing, admin</td>
+<td>Console, claim</td>
+<td>A move the lifecycle does not allow; a zero approval with no denial code</td>
+<td>Each status, the remittance, the history</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Invoice</td>
+<td>billing, admin</td>
+<td>Console, Invoices</td>
+<td>A session already invoiced; not billable</td>
+<td>Lines, the patient's share, payments and refunds</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="session-states">How a session moves</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: How a session moves"><table>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scheduled</code></td>
+<td><code>checked_in</code></td>
+<td>Check-in</td>
+</tr>
+<tr>
+<td><code>checked_in</code></td>
+<td><code>in_progress</code></td>
+<td>Start</td>
+</tr>
+<tr>
+<td><code>in_progress</code></td>
+<td><code>completed</code></td>
+<td>End, with the reason <em>completed as prescribed</em></td>
+</tr>
+<tr>
+<td><code>in_progress</code></td>
+<td><code>aborted</code></td>
+<td>End, with any other reason — a short run is never recorded as completed</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>missed</code>, <code>cancelled</code> and <code>refused</code> exist as statuses but no endpoint sets them. Locking is not a status: it is the moment both signatures are present.</p>
+<h3 id="claim-states">How a claim moves</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: How a claim moves"><table>
+<thead>
+<tr>
+<th>From</th>
+<th>May be moved by hand to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>draft</code></td>
+<td><code>ready</code>, <code>submitted</code>, <code>void</code></td>
+</tr>
+<tr>
+<td><code>ready</code></td>
+<td><code>draft</code>, <code>submitted</code>, <code>void</code></td>
+</tr>
+<tr>
+<td><code>submitted</code></td>
+<td><code>acknowledged</code>, <code>in_process</code>, <code>returned</code>, <code>denied</code></td>
+</tr>
+<tr>
+<td><code>acknowledged</code></td>
+<td><code>in_process</code>, <code>returned</code>, <code>denied</code></td>
+</tr>
+<tr>
+<td><code>in_process</code></td>
+<td><code>returned</code>, <code>denied</code></td>
+</tr>
+<tr>
+<td><code>returned</code></td>
+<td><code>resubmitted</code></td>
+</tr>
+<tr>
+<td><code>resubmitted</code></td>
+<td><code>acknowledged</code>, <code>in_process</code>, <code>returned</code>, <code>denied</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>approved</code>, <code>partially_paid</code> and <code>paid</code> are never picked from a list: recording the payer's remittance sets them from the amounts. Only a <code>draft</code> or <code>ready</code> claim can be voided, which releases its sessions to be claimed again; voiding a claim the payer already holds is how one treatment gets paid twice.</p>
+<h2 id="screens"><span class="secnum">7</span> Screens</h2>
+<h3 id="screens-bedside">Bedside tablet</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Bedside tablet"><table>
+<thead>
+<tr>
+<th>Screen</th>
+<th>What it does</th>
+<th>Without a network</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sign in</td>
+<td>Password once per tablet, then a six-digit PIN; a Lock button</td>
+<td>Needs the network to sign in or unlock</td>
+</tr>
+<tr>
+<td>Board</td>
+<td>Today's sessions for the unit</td>
+<td>Shows the last copy it downloaded</td>
+</tr>
+<tr>
+<td>Check-in, start, end</td>
+<td>The three lifecycle steps and their checks. When infection control refuses, it shows the breach and makes overriding with a reason a deliberate second step rather than a prompt that opens by itself. Shows the machine's runs since its last disinfection, and the server's Kt/V and URR after the end</td>
+<td>Not offered</td>
+</tr>
+<tr>
+<td>Flow sheet</td>
+<td>Observations prefilled from the previous row; coded events; the planned UF rate, marked when above 13 ml/kg/h</td>
+<td>Works; entries queue in the outbox</td>
+</tr>
+<tr>
+<td>Sync bar</td>
+<td>How many entries are waiting, and how many came back as conflicts or rejections</td>
+<td>Shows the waiting count</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="screens-console">Console</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Console"><table>
+<thead>
+<tr>
+<th>Screen</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Daily board</td>
+<td>The day by shift; generates the day from standing patterns; opens a session</td>
+</tr>
+<tr>
+<td>Water</td>
+<td>Records the morning check; says whether the unit is cleared to dialyse today and whether the next start will be allowed; lists the day's readings</td>
+</tr>
+<tr>
+<td>Patients</td>
+<td>Searches the registry; registers a patient</td>
+</tr>
+<tr>
+<td>Patient chart</td>
+<td>Demographics and cohort; dry weights, with a form to set a new one; prescriptions, standing pattern and serology to read; the bloods panel — order a panel, file results, move an order on</td>
+</tr>
+<tr>
+<td>Session</td>
+<td>The record and its flow sheet; the nurse signature and the countersignature</td>
+</tr>
+<tr>
+<td>Claims, and a claim</td>
+<td>Claimable sessions grouped by benefit period, with the allotment left; generate a claim; outstanding totals; move a claim through the payer's statuses; record a remittance; void a draft</td>
+</tr>
+<tr>
+<td>Invoices, and an invoice</td>
+<td>Draft from sessions; issue; take payments and refunds; void</td>
+</tr>
+<tr>
+<td>Controls</td>
+<td>The three detective controls: cohort violations, dialyzer exceptions, water exceptions</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Facility details and timezone; chair cohorts; high-alert flags; staff roles; the benefit programmes in force (shown, not added)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="api-only">Work the API does that no screen offers</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Work the API does that no screen offers"><table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Endpoint</th>
+<th>Who may call it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Record serology</td>
+<td><code>POST /api/v1/patients/{patient}/serology</code></td>
+<td>Chart editors</td>
+</tr>
+<tr>
+<td>Change patient status</td>
+<td><code>POST /api/v1/patients/{patient}/status</code></td>
+<td>Chart editors</td>
+</tr>
+<tr>
+<td>Edit demographics</td>
+<td><code>PATCH /api/v1/patients/{patient}</code></td>
+<td>Chart editors</td>
+</tr>
+<tr>
+<td>Retire a patient</td>
+<td><code>DELETE /api/v1/patients/{patient}</code></td>
+<td>admin</td>
+</tr>
+<tr>
+<td>Write a prescription</td>
+<td><code>POST /api/v1/patients/{patient}/prescriptions</code></td>
+<td>nephrologist</td>
+</tr>
+<tr>
+<td>Set a standing pattern</td>
+<td><code>POST /api/v1/patients/{patient}/schedule</code></td>
+<td>head nurse, nurse, admin</td>
+</tr>
+<tr>
+<td>Give a medication</td>
+<td><code>POST /api/v1/sessions/{session}/medications</code></td>
+<td>nurse, head nurse, nephrologist</td>
+</tr>
+<tr>
+<td>Amend a locked session</td>
+<td><code>POST /api/v1/sessions/{session}/amend</code></td>
+<td>nephrologist</td>
+</tr>
+<tr>
+<td>Machines: list, maintenance, disinfection</td>
+<td><code>/api/v1/machines…</code></td>
+<td>read: anyone; write: technician, head nurse, admin</td>
+</tr>
+<tr>
+<td>Dialyzers: list, reprocess, history</td>
+<td><code>/api/v1/patients/{patient}/dialyzers</code>, <code>/api/v1/dialyzers/{dialyzer}/…</code></td>
+<td>read: anyone; reprocess: technician, head nurse, admin</td>
+</tr>
+<tr>
+<td>Stock: on hand, lots, receipts, issues</td>
+<td><code>/api/v1/stock…</code></td>
+<td>read: anyone; write: technician, head nurse, admin</td>
+</tr>
+<tr>
+<td>Quality and utilisation reports</td>
+<td><code>GET /api/v1/reports/quality</code>, <code>/utilisation</code></td>
+<td>anyone</td>
+</tr>
+<tr>
+<td>Add a benefit programme</td>
+<td><code>POST /api/v1/settings/benefit-programs</code></td>
+<td>admin (<a href="admin-guide.html#benefit-rate">AG·1 §3</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="decisions"><span class="secnum">8</span> Decisions, and why</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Decisions, and why"><table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Why</th>
+<th>What it costs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A separate React client and a Laravel JSON API</td>
+<td>The bedside tablet and the desk console share one architecture; the tablet must work offline</td>
+<td>Authentication, validation and routing exist on both sides</td>
+</tr>
+<tr>
+<td>MySQL 8.0.16 or newer, never MariaDB or SQLite</td>
+<td>CHECK constraints are enforced from 8.0.16; the quality view needs <code>LATERAL</code>; the invariants depend on triggers and stored generated columns</td>
+<td>Hosts offering only MariaDB cannot run it</td>
+</tr>
+<tr>
+<td>One baseline schema file plus migrations after it</td>
+<td>The schema stays one readable document a clinical auditor can review</td>
+<td>The baseline is never edited; two workarounds keep Laravel happy with it (<a href="technical-spec.html#traps">TS·1 §11</a>)</td>
+</tr>
+<tr>
+<td>BIGINT keys inside, ULIDs outside</td>
+<td>InnoDB clusters on the key; random keys scatter inserts. ULIDs in URLs leak neither row counts nor a guessable sequence</td>
+<td>Only patients, staff and sessions have ULIDs; claims and invoices travel by number, reference rows by integer id</td>
+</tr>
+<tr>
+<td><code>DATETIME(3)</code> in UTC, never <code>TIMESTAMP</code></td>
+<td><code>TIMESTAMP</code> ends in 2038, inside the 10–15-year retention period</td>
+<td>Every &quot;today&quot; is computed from the facility's timezone</td>
+</tr>
+<tr>
+<td>Each invariant twice: service and database</td>
+<td>The service gives a readable refusal and an audit row; the database stops what never passes through a service</td>
+<td>Two places to change when a rule changes</td>
+</tr>
+<tr>
+<td>Sign-in tokens bound to one tablet, with a PIN</td>
+<td>A tablet offline for hours needs a token it can reuse the moment the network returns; a password twenty times a shift guarantees a shared login</td>
+<td>A copied token is revoked on sight, so a client that forgets the device header signs its nurse out</td>
+</tr>
+<tr>
+<td>An outbox and idempotent sync</td>
+<td>Networks retry and nurses re-tap; neither may create a second set of vitals; one bad row must not sink four hours of charting</td>
+<td>Every new operation type needs a <code>client_uuid</code> column with a unique index</td>
+</tr>
+<tr>
+<td>Observations append-only, keyed by time</td>
+<td>Conflict-free by construction</td>
+<td>Corrections are new rows, never edits</td>
+</tr>
+<tr>
+<td>Check-in, start and end online only</td>
+<td>A refusal found at sync time arrives after the patient was dialysed</td>
+<td>A unit with no network cannot start treatment in the system; it runs on paper and back-enters</td>
+</tr>
+<tr>
+<td>Adequacy computed by the server; the tablet computes too</td>
+<td>The nurse sees a result at the chair; the stored number is the server's</td>
+<td>Two implementations pinned to one worked example (<a href="technical-spec.html#adequacy">TS·1 §5</a>)</td>
+</tr>
+<tr>
+<td>Benefit rates as dated rows</td>
+<td>The PhilHealth rate went ₱2,600 → ₱4,000 → ₱6,350 and the allotment 90 → 156 in two years</td>
+<td>Adding a rate is a data change with rules, not an edit</td>
+</tr>
+<tr>
+<td>The quality report reads a nightly copy of the quality view</td>
+<td>The view materialises every session before it can answer; one definition of &quot;average Kt/V&quot; must not become two</td>
+<td>The report can be up to a day old, says how old, and can be asked for the live view instead</td>
+</tr>
+<tr>
+<td>The unit's day from the facility's timezone</td>
+<td>A water check at 05:30 in Manila belongs to that day, not the UTC day before</td>
+<td>Every &quot;today&quot; goes through one calendar service</td>
+</tr>
+<tr>
+<td>One override, for infection control only</td>
+<td>A rule with no way through gets worked around outside the system, where nothing records it</td>
+<td>The same breach at check-in and at start needs two reasons (<a href="#open-questions">§9</a>)</td>
+</tr>
+<tr>
+<td>No <code>window.confirm</code>, <code>alert</code> or <code>prompt</code></td>
+<td>They stall the tablet's sync loop, and a yes/no cannot carry the reason the system demands</td>
+<td>Every confirmation goes through one shared dialog</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="open-questions"><span class="secnum">9</span> Open questions</h2>
+<p>These were left as found on purpose. Each needs a clinical or business decision, not a code change.</p>
+<ol>
+<li><strong>Does an override at check-in carry to the start?</strong> Today it does not: the start re-checks, so the same breach needs a second reason and leaves a second note.</li>
+<li><strong>Should a failing water re-test during the day stop the next start?</strong> Today it does not: once a passing check exists for the day, a later failing one is shown on the Water screen but the next start is allowed — the original &quot;not every needle&quot; policy. Chlorine breakthrough at noon does not block the 13:00 start.</li>
+<li><strong>Should the two signatures have to come from two different people?</strong> Today only their roles differ (<a href="#roles">§3</a>).</li>
+<li><strong>Who may set a dry weight, and must they give a reason?</strong> Today five roles may, and the reason is optional.</li>
+<li><strong>Is the reuse policy right for this unit?</strong> The seed says 6 uses and an 80% volume floor; the unit's own SOP decides.</li>
+</ol>
+<h2 id="done"><span class="secnum">10</span> Definition of done</h2>
+<p>A change to this system is finished when every line below can be ticked. It is the project's own rule, from <code>CLAUDE.md</code>, made checkable.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Definition of done"><table class="ticks">
+<thead>
+<tr>
+<th>Check</th>
+<th>How</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The server suite passes on MySQL, never SQLite</td>
+<td><code>php artisan test</code> in <code>apps/api</code> — today 282 passed</td>
+<td></td>
+</tr>
+<tr>
+<td>The shared clinical maths passes</td>
+<td><code>npm test</code> at the repository root</td>
+<td></td>
+</tr>
+<tr>
+<td>Formatting and static analysis are clean</td>
+<td><code>./vendor/bin/pint --test</code> and <code>./vendor/bin/phpstan analyse</code> in <code>apps/api</code></td>
+<td></td>
+</tr>
+<tr>
+<td>All five client workspaces type-check</td>
+<td><code>npm run typecheck</code></td>
+<td></td>
+</tr>
+<tr>
+<td>If a table in the invariant list was touched, its named test ran and passed — and the summary says which</td>
+<td><a href="technical-spec.html#engine">TS·1 §5</a> names each test</td>
+<td></td>
+</tr>
+<tr>
+<td>If a sync operation type was added, the protocol verifier still passes</td>
+<td><code>php verify/verify_sync.php</code> — 16 passed, 0 failed</td>
+<td></td>
+</tr>
+<tr>
+<td>Every new clinical constant cites its source in a code comment</td>
+<td>Reading the diff</td>
+<td></td>
+</tr>
+<tr>
+<td>The summary states plainly what was not verified</td>
+<td>Reading the summary</td>
+<td></td>
+</tr>
+<tr>
+<td>If the change alters behaviour these documents describe, the source was edited and the set rebuilt</td>
+<td><code>php docs/build.php</code> exits 0</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>DS·1</span> Design specification · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>docs/src/design-spec.md</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

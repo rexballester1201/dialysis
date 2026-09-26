@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="Reading order, map, rules not to break, unattended jobs, week-one checklist, safe change process, surprises, known limits and handover checklist.">
+<title>Handover · HO·1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "HO·1 · Handover · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html" aria-current="page"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">HO·1</span> Handover</p><h1>Taking over this system</h1><p class="standfirst">What to read first, where everything is, the four rules not to break and what breaks if you do, what runs without you, your first week, and how to change it safely.</p><dl class="control"><div><dt>Reference</dt><dd>HO·1</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>The developer or team taking over maintenance.</dd></div><div><dt>Applies to</dt><dd>The repository as handed over on 26 September 2026 — not yet under version control.</dd></div><div><dt>Source</dt><dd><code>docs/src/handover.md</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#reading-order"><span class="secnum">1</span> Read these first, in this order</a></li><li><a href="#map"><span class="secnum">2</span> The map</a></li><li><a href="#rules"><span class="secnum">3</span> Four rules not to break</a></li><li><a href="#unattended"><span class="secnum">4</span> What runs without you</a></li><li><a href="#week-one"><span class="secnum">5</span> Your first week</a></li><li><a href="#change"><span class="secnum">6</span> Changing it safely</a></li><li><a href="#surprises"><span class="secnum">7</span> What will surprise you</a></li><li><a href="#limits"><span class="secnum">8</span> Known limits</a></li><li><a href="#checklist"><span class="secnum">9</span> Handover checklist</a></li></ol></nav>
+<article class="doc-body">
+<h2 id="reading-order"><span class="secnum">1</span> Read these first, in this order</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Read these first, in this order"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Read</th>
+<th>Why</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>This document</td>
+<td>What you are taking on, and what will bite</td>
+<td>20 minutes</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>CLAUDE.md</code> at the repository root</td>
+<td>The rules for changing the code: the invariant table, twelve MySQL behaviours that were each hit once, the known gaps, the definition of done</td>
+<td>An hour</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="technical-spec.html">TS·1</a></td>
+<td>How it is built, the order of checks, the known defects</td>
+<td>An hour</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="design-spec.html">DS·1</a></td>
+<td>What it is for, who may do what, and the open questions</td>
+<td>45 minutes</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>technical-design.md</code>, sections 3 and 7</td>
+<td>Why MySQL shaped the schema the way it did, and the offline sync protocol</td>
+<td>45 minutes</td>
+</tr>
+<tr>
+<td>6</td>
+<td>The header comment of <code>apps/api/database/schema/mysql-schema.sql</code></td>
+<td>The non-obvious column choices, in the schema's own words</td>
+<td>20 minutes</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="admin-guide.html">AG·1</a> and <a href="deployment-guide.html">DG·1</a></td>
+<td>Before you touch the live installation</td>
+<td>An hour</td>
+</tr>
+</tbody>
+</table></div>
+<p>Then the code, following one treatment through it: <code>apps/api/routes/api.php</code> → <code>SessionService</code> → <code>SessionLockService</code> → <code>FlowSheetService</code> → <code>BenefitLedger</code> → <code>SyncBatchProcessor</code> and <code>UpsertSessionHandler</code> → <code>WaterComplianceService</code> and <code>FacilityCalendar</code> → <code>AppServiceProvider</code>. The tests named in the invariant table show each rule being tried and refused.</p>
+<h2 id="map"><span class="secnum">2</span> The map</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The map"><table>
+<thead>
+<tr>
+<th>Where</th>
+<th>What</th>
+<th>Touch it when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/api</code></td>
+<td>The Laravel API — the only thing that talks to MySQL</td>
+<td>Any rule, any data</td>
+</tr>
+<tr>
+<td><code>apps/api/database/schema/mysql-schema.sql</code></td>
+<td>The baseline schema</td>
+<td>Never. Changes are migrations</td>
+</tr>
+<tr>
+<td><code>apps/api/database/migrations</code></td>
+<td>The three changes since the baseline</td>
+<td>Every schema change</td>
+</tr>
+<tr>
+<td><code>apps/api/tests/Feature</code></td>
+<td>18 suites, named for what they protect</td>
+<td>Every behaviour change</td>
+</tr>
+<tr>
+<td><code>apps/api/verify/verify_sync.php</code></td>
+<td>The standalone sync-protocol check</td>
+<td>Any sync change</td>
+</tr>
+<tr>
+<td><code>apps/bedside</code></td>
+<td>The tablet app</td>
+<td>Charting, the lifecycle at the chair, offline</td>
+</tr>
+<tr>
+<td><code>apps/console</code></td>
+<td>The desk app</td>
+<td>Everything else on a screen</td>
+</tr>
+<tr>
+<td><code>packages/domain</code></td>
+<td>The clinical maths, twinned with <code>Adequacy.php</code></td>
+<td>Only together with its twin</td>
+</tr>
+<tr>
+<td><code>packages/api-client</code></td>
+<td>Typed calls and schemas for every resource</td>
+<td>Whenever a resource changes shape</td>
+</tr>
+<tr>
+<td><code>packages/ui</code></td>
+<td>The confirmation dialog and its sweep</td>
+<td>Any confirmation</td>
+</tr>
+<tr>
+<td><code>deploy/</code></td>
+<td>The no-shell deployment bundle: SQL files, pre-flight, key generator, account tool</td>
+<td>Every release that changes the schema; every new account</td>
+</tr>
+<tr>
+<td><code>deploy/accounts/CREDENTIALS.*</code></td>
+<td>Live starter passwords and PINs, if they still exist</td>
+<td>Never share; destroy once handed out</td>
+</tr>
+<tr>
+<td><code>docs/</code></td>
+<td>This set and its builder</td>
+<td>Whenever described behaviour changes</td>
+</tr>
+<tr>
+<td><code>.github/workflows/ci.yml</code></td>
+<td>The CI gates — never yet run</td>
+<td>When the repository exists</td>
+</tr>
+<tr>
+<td><code>CLAUDE.md</code></td>
+<td>The working rules</td>
+<td>When a rule or a known gap changes</td>
+</tr>
+<tr>
+<td><code>AGENTS.md</code></td>
+<td>A stale copy of <code>CLAUDE.md</code> from 23 August 2026</td>
+<td>Decide: regenerate it from <code>CLAUDE.md</code>, or delete it. Until then, do not follow it</td>
+</tr>
+<tr>
+<td><code>README.md</code>, <code>technical-design.md</code>, <code>INITIAL-PROMPT.md</code></td>
+<td>The front door, the original design, the original brief</td>
+<td>Rarely</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="rules"><span class="secnum">3</span> Four rules not to break</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Four rules not to break"><table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>What breaks if you do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Never weaken an invariant, its database backstop or its test to make something pass.</strong> If a test is wrong, say why before you change it</td>
+<td>The refusal that keeps a hepatitis-B patient off a clean machine, a second bill off one treatment, or a quiet edit off a signed record stops existing — and the one suite that would have told you turns green</td>
+</tr>
+<tr>
+<td><strong>Never store a derived value a client sent.</strong> The server computes Kt/V, URR, weight gain, duration, invoice totals and stock balances from their inputs</td>
+<td>A chart holds a Kt/V that disagrees with its own blood results and is believed; a shelf count drifts from its movements; an invoice line that bcmath read as zero is priced at nothing</td>
+</tr>
+<tr>
+<td><strong>Change the database only by a migration with a SQL twin in <code>deploy/sql</code>, and never edit the baseline</strong></td>
+<td>Production has no shell, so <code>php artisan migrate</code> never runs there. A migration without its SQL twin never reaches the live database, and the code and the schema it expects drift apart without an error until the first query that needs the change</td>
+</tr>
+<tr>
+<td><strong>Never delete a patient, a treatment session or an audit row, and never <code>SET @allow_amendment = 1</code> outside <code>SessionLockService::amend()</code></strong></td>
+<td>The records are kept 10 to 15 years and are the unit's legal account of care. A deleted row or an unrecorded edit cannot be recovered, and the audit trail stops meaning anything</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="unattended"><span class="secnum">4</span> What runs without you</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What runs without you"><table>
+<thead>
+<tr>
+<th>What</th>
+<th>When</th>
+<th>If it stops</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cron → <code>php artisan schedule:run</code></td>
+<td>Every minute</td>
+<td>Nothing below runs</td>
+</tr>
+<tr>
+<td><code>dialysis:check-controls</code></td>
+<td>06:00 and 18:00 <strong>UTC</strong> (14:00 and 02:00 Manila)</td>
+<td>Breaches that got past the checks — imports, direct edits, overrides — go unread</td>
+</tr>
+<tr>
+<td><code>dialysis:summarise-quality</code></td>
+<td>02:30 UTC</td>
+<td>The quality report goes stale; it reports how stale</td>
+</tr>
+<tr>
+<td>Log rotation</td>
+<td>Daily; 14 files kept</td>
+<td>A disk quota fills</td>
+</tr>
+<tr>
+<td>Tablet sync</td>
+<td>Every 30 seconds while the app is open, and when the network returns</td>
+<td>Charting waits in the outbox; nothing is lost</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Not running, and yours to arrange:</strong> backups (none exist in the application), a queue worker (nothing queues yet), email (nothing sends), and CI (never run).</p>
+<h2 id="week-one"><span class="secnum">5</span> Your first week</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Your first week"><table class="ticks">
+<thead>
+<tr>
+<th>Task</th>
+<th>How</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Put the code under version control</td>
+<td><code>git init</code>, a first commit — nothing is versioned today, and the only copy may be one machine</td>
+<td></td>
+</tr>
+<tr>
+<td>Run every check on your own machine</td>
+<td><a href="technical-spec.html#tests">TS·1 §10</a>: expect 282 Pest tests, 9 Vitest tests, five clean workspaces, smoke 5/5, verify 16/16</td>
+<td></td>
+</tr>
+<tr>
+<td>Run CI once and fix what it finds</td>
+<td>Push to a repository with Actions enabled; it has never run</td>
+<td></td>
+</tr>
+<tr>
+<td>Take over every access</td>
+<td>cPanel, phpMyAdmin, the domain and DNS, TLS, the database password, a copy of <code>APP_KEY</code> — in person, then rotate the database password</td>
+<td></td>
+</tr>
+<tr>
+<td>Prove a backup restores</td>
+<td><a href="admin-guide.html#backups">AG·1 §7</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Confirm the scheduler runs</td>
+<td><code>SELECT MAX(summarised_at) FROM monthly_quality_summaries;</code> is within a day</td>
+<td></td>
+</tr>
+<tr>
+<td>Understand every row on the Controls screen</td>
+<td><a href="troubleshooting.html#jobs">TG·1 §12</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Agree owners for the known defects and open questions</td>
+<td><a href="technical-spec.html#known-defects">TS·1 §5</a>, <a href="design-spec.html#open-questions">DS·1 §9</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Confirm the timezone and the clinical thresholds with the clinical lead</td>
+<td><a href="admin-guide.html#settings">AG·1 §3</a> and <a href="admin-guide.html#routine">§8</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Rebuild this documentation</td>
+<td><code>php docs/build.php</code> exits 0</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="change"><span class="secnum">6</span> Changing it safely</h2>
+<ol>
+<li><strong>Find the rule your change touches.</strong> The invariant table in <a href="technical-spec.html#engine">TS·1 §5</a> names the service, the backstop and the test for each.</li>
+<li><strong>Branch.</strong> Once the repository exists, never work on the main line.</li>
+<li><strong>Change the test first</strong> in the suite that owns the rule. A new clinical or billing rule gets a case in <code>ClinicalInvariantsTest</code>, <code>OpsControlsTest</code>, <code>BillingTest</code>, <code>SessionLifecycleTest</code>, <code>AdequacyTest</code> or <code>SyncProtocolTest</code>.</li>
+<li><strong>Schema change:</strong> a migration, plus the same change as guarded, re-runnable SQL appended to <code>deploy/sql</code> in the pattern of <code>02-post-baseline.sql</code>; if you add tables, views or triggers, update the counts in <code>HealthController</code>, <code>deploy/preflight.php</code> and <code>DEPLOYMENT.md</code>. A new model goes into <code>ModelIntegrityTest</code>, and any generated column into its <code>$generated</code>.</li>
+<li><strong>New sync operation type:</strong> register the handler in <code>AppServiceProvider</code>, give its table a <code>client_uuid</code> with a unique index, add a <code>SyncProtocolTest</code> case, and keep <code>verify_sync.php</code> at 16 passed.</li>
+<li><strong>Clinical constant:</strong> cite its source in a comment. If it touches adequacy, change both twins and both tests.</li>
+<li><strong>Run the definition of done</strong> (<a href="design-spec.html#done">DS·1 §10</a>) and say in your summary what you did not verify.</li>
+<li><strong>Update the documentation sources</strong> and rebuild the set.</li>
+<li><strong>Deploy by the upgrade procedure</strong> in <a href="deployment-guide.html">DG·1</a>, keeping the previous release ready to switch back to.</li>
+</ol>
+<h2 id="surprises"><span class="secnum">7</span> What will surprise you</h2>
+<ul>
+<li><strong>It is not a git repository</strong>, and the CI workflow has never run.</li>
+<li><strong>One missing header signs a nurse out.</strong> A request without the right <code>X-Device-Id</code> revokes the token rather than refusing it. <code>sync.ts::authHeaders</code> is the one place that builds the headers; add calls through it.</li>
+<li><strong>The scheduler runs on UTC</strong>, and <code>APP_TIMEZONE</code> in <code>.env</code> is not read — <code>config/app.php</code> fixes UTC.</li>
+<li><strong>After one failed chlorine test, <code>check-controls</code> fails at every run for 90 days</strong>, because the water list keeps every breach of the last 90 days.</li>
+<li><strong>Claims never reach <code>audit_logs</code>.</strong> The ledger writes them with the query builder; their trail is <code>claim_status_histories</code>.</li>
+<li><strong>The baseline, the seed and the smoke test all begin with <code>USE dialysis;</code>.</strong> Pipe them into another database unedited and they write into <code>dialysis</code> anyway. The application strips it; the <code>mysql</code> client does not.</li>
+<li><strong>The development database is its own MySQL 8.4 instance on port 3308.</strong> The machine's other MySQL on 3306 holds unrelated databases.</li>
+<li><strong>Token abilities are recorded and never checked.</strong> Authorisation is the role-based policies.</li>
+<li><strong>The two signatures are separated by role, not person</strong>, and five roles can set a dry weight.</li>
+<li><strong>The seeded benefit programmes leave a gap</strong> from 1 July to 8 October 2024 (the ₱4,000 rate was never seeded), so a session in that window cannot be claimed until a programme covering it is added.</li>
+<li><strong>Stock write-offs and quarantine exist in <code>StockService</code> with no endpoint</strong>, and <code>missed</code>, <code>cancelled</code> and <code>refused</code> exist as session statuses that no endpoint sets.</li>
+<li><strong>Disinfecting a machine clears a common refusal, and has no screen.</strong> Nurses meet <em>&quot;That machine last treated a hbv patient…&quot;</em> at the chair; the fix is an API call.</li>
+<li><strong><code>apps/api/README.md</code> is Laravel's stock README.</strong> The project's own is the root <code>README.md</code>, and its licence, MIT, is in the root <code>LICENSE</code>.</li>
+</ul>
+<h2 id="limits"><span class="secnum">8</span> Known limits</h2>
+<p>The complete lists are <a href="design-spec.html#not-built">DS·1 §2</a> (what is not built), <a href="technical-spec.html#known-defects">TS·1 §5</a> (defects found while documenting) and the <em>Known gaps</em> section of <code>CLAUDE.md</code>. The five that matter most on a working day:</p>
+<ol>
+<li><strong>No staff management in the app</strong> — every account, reset and leaver is SQL.</li>
+<li><strong>Work with no screen</strong> — serology, patient status and details, prescriptions, standing patterns, doses, amendments, machines, dialyzers, stock and two reports are API-only.</li>
+<li><strong>The tablet cannot start from cold without a network</strong>, and there is no automated offline test — the one test the design says catches real bugs.</li>
+<li><strong>The safety sweep runs at the wrong time of day</strong> for a unit outside UTC.</li>
+<li><strong>Nothing has been independently reviewed</strong> — not the code, not the security, not the clinical content.</li>
+</ol>
+<h2 id="checklist"><span class="secnum">9</span> Handover checklist</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Handover checklist"><table class="ticks">
+<thead>
+<tr>
+<th>Item</th>
+<th>Why it matters</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cPanel login transferred, and its password changed</td>
+<td>Whoever held it can still change everything</td>
+<td></td>
+</tr>
+<tr>
+<td>Domain registrar and DNS access transferred</td>
+<td>An expired domain takes the unit offline</td>
+<td></td>
+</tr>
+<tr>
+<td>TLS renewal — who gets the warning when it fails</td>
+<td>The tablets will not work over plain HTTP</td>
+<td></td>
+</tr>
+<tr>
+<td>Database password rotated after handover, <code>.env</code> updated the same minute</td>
+<td>The one credential that can write the database</td>
+<td></td>
+</tr>
+<tr>
+<td>A copy of <code>APP_KEY</code> in a password manager</td>
+<td>Nothing is encrypted with it today, but anything added later that encrypts would depend on it</td>
+<td></td>
+</tr>
+<tr>
+<td>Backup location, schedule and the date of the last successful restore test</td>
+<td>The only way back from the worst case</td>
+<td></td>
+</tr>
+<tr>
+<td>Cron entry confirmed running</td>
+<td>The scheduled checks depend on it</td>
+<td></td>
+</tr>
+<tr>
+<td>The people holding <code>admin</code>, by name</td>
+<td>Someone must be able to grant roles</td>
+<td></td>
+</tr>
+<tr>
+<td>Credentials sheets confirmed destroyed, none on the server or in email</td>
+<td>They hold live passwords and PINs</td>
+<td></td>
+</tr>
+<tr>
+<td>The code copied off the previous owner's machine and under version control</td>
+<td>Today there may be one copy</td>
+<td></td>
+</tr>
+<tr>
+<td>The clinical lead's sign-off on the thresholds, timezone, chair cohorts, high-alert list and benefit rate</td>
+<td>They are configuration, and the unit owns them</td>
+<td></td>
+</tr>
+<tr>
+<td>Owners named for each known defect and open question</td>
+<td>Otherwise they are rediscovered the expensive way</td>
+<td></td>
+</tr>
+<tr>
+<td>This documentation rebuilt and opened on the new owner's machine</td>
+<td>Proves the builder works in the new owner's hands</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>HO·1</span> Handover · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>docs/src/handover.md</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="What the Dialysis Centre System does, why it can be trusted, running costs, honest limits and who it suits.">
+<title>Product overview · MK·1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "MK·1 · Product overview · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html" aria-current="page"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">MK·1</span> Product overview</p><h1>A clinical system that refuses before it records</h1><p class="standfirst">What it does for a haemodialysis unit, why its records can be trusted, what it costs to run, what it does not do, and who it suits.</p><dl class="control"><div><dt>Reference</dt><dd>MK·1</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>Clinic owners, medical directors and managers deciding whether to adopt it.</dd></div><div><dt>Applies to</dt><dd>What exists on 26 September 2026 — not a roadmap.</dd></div><div><dt>Source</dt><dd><code>docs/src/marketing.md</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#what-it-does"><span class="secnum">1</span> What it does</a></li><li><a href="#trust"><span class="secnum">2</span> Why its records can be trusted</a></li><li><a href="#cost"><span class="secnum">3</span> What it costs to run</a></li><li><a href="#limits"><span class="secnum">4</span> What it does not do</a></li><li><a href="#fit"><span class="secnum">5</span> Who it suits, and who it does not</a></li><li><a href="#adopting"><span class="secnum">6</span> What adopting it involves</a></li></ol></nav>
+<article class="doc-body">
+<h2 id="what-it-does"><span class="secnum">1</span> What it does</h2>
+<p>A clinical and billing system for <strong>one in-centre haemodialysis unit</strong>, built around the treatment day: the morning water test, the chairs, the machines, the flow sheet at the chair, the signed record, and the claim that follows it. It is seeded for a Philippine unit with PhilHealth as the main payer.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What it does"><table>
+<thead>
+<tr>
+<th>For</th>
+<th>It does</th>
+<th>What that is worth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The technician</td>
+<td>Records the morning total-chlorine test, and holds the day's first treatment until a passing one exists</td>
+<td>Chlorine that passes the carbon beds is found before it reaches a patient, not on the monthly report</td>
+</tr>
+<tr>
+<td>The head nurse</td>
+<td>Builds each day's board from the patients' standing patterns; refuses a second patient in a chair already booked for that shift</td>
+<td>Nobody rebuilds the roster by hand, and double-bookings are refused when they are made, not found at the chair</td>
+</tr>
+<tr>
+<td>The nurse at the chair</td>
+<td>Check-in, start and end on a tablet, with the infection-control, machine and dialyzer checks at each step; a flow sheet that keeps working when the network drops</td>
+<td>A hepatitis-B patient is not seated in a clean chair by mistake; four hours of charting survive a dead Wi-Fi router</td>
+</tr>
+<tr>
+<td>The nephrologist</td>
+<td>Countersigns the record, which then locks; amends it only with a written reason; sees adequacy computed from the blood results, flagged when below target</td>
+<td>The signed record is the account of what happened, and a Kt/V on it agrees with its own blood results</td>
+</tr>
+<tr>
+<td>Billing</td>
+<td>Generates claims from signed treatments only, counts each patient's annual allotment, follows the payer's decisions, and invoices what remains</td>
+<td>No session is billed twice; nobody finds out in November that a patient's cover ran out in September</td>
+</tr>
+<tr>
+<td>The administrator</td>
+<td>Settings with their consequences spelled out; a twice-daily sweep for anything that got past the checks</td>
+<td>The rules stay configured the way the room actually is</td>
+</tr>
+<tr>
+<td>The unit, to a regulator</td>
+<td>Every change to a clinical record, every chart opened and every sign-in attempt, kept</td>
+<td>&quot;Who looked at this patient's record?&quot; has an answer</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="trust"><span class="secnum">2</span> Why its records can be trusted</h2>
+<p>One rule runs through all of it: <strong>every rule that protects a patient or a bill is checked at the moment it can still prevent harm, by the one part of the system that owns it — and checked again by the database underneath. When a rule has to bend, it bends only through a written reason that stays on the record.</strong></p>
+<p>What that looks like in use:</p>
+<ul>
+<li><strong>It refuses before the needle, not after.</strong> The water, the chair, the machine and the dialyzer are checked when the patient is checked in and when treatment starts. That is why those steps need a network connection: a refusal that arrived hours later, when the tablet synced, would protect nobody.</li>
+<li><strong>It will not store a number it can work out itself</strong> from the raw readings — adequacy, weight gain, treatment time, invoice totals, stock balances. A chart can only hold a figure that agrees with its own inputs.</li>
+<li><strong>A signed record cannot be edited.</strong> It can be amended by a nephrologist with a reason; the original values, the reason and who made the change are all kept.</li>
+<li><strong>It has one override, and it shows.</strong> Infection control can be overridden when there is genuinely no compliant chair — with a written reason that goes onto the chart and the audit log. Nothing else can be overridden.</li>
+<li><strong>It does not guess.</strong> A record missing a weight cannot be signed; the refusal says which field. A blocked save costs a minute; a wrong record is believed for years.</li>
+<li><strong>Rates are dated, not built in.</strong> The PhilHealth case rate moved ₱2,600 → ₱4,000 → ₱6,350 and the allotment 90 → 156 in two years. Rates are kept as dated entries, so an old claim still prices at the rate that applied then.</li>
+</ul>
+<p>The evidence, from the development machine on 26 September 2026: <strong>282 automated server tests (1,309 checks) passing on MySQL</strong>, five database-level assertions passing on a fresh database, all sixteen checks of the offline-sync protocol passing, and no errors from static analysis (PHPStan level 8). Both apps were driven through their workflows by hand during development, as the repository's notes record; that was not repeated for this document.</p>
+<p>What the evidence is not: the automated pipeline that would re-run those checks on every change has never run, there are no automated tests of the screens, and <strong>no independent audit, security review or regulatory certification has been done.</strong> The documents in this set were written by the people who built it.</p>
+<h2 id="cost"><span class="secnum">3</span> What it costs to run</h2>
+<p>The software has no per-seat or per-patient fee built into it. What a unit pays for is the ground it stands on and the people who look after it.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: What it costs to run"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>What is needed</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Software licences</td>
+<td>None to buy. Built on Laravel and React (MIT licence) and MySQL Community Edition</td>
+<td>The system itself is published under the MIT licence (<code>LICENSE</code>); <code>THIRD-PARTY-NOTICES.md</code> lists the parts that are other people's work</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td>A web host with PHP 8.2 or newer, <strong>MySQL 8.0.16 or newer (not MariaDB)</strong>, HTTPS, cron, and about 160 MB of disk for the application before any data</td>
+<td>Runs on ordinary cPanel shared hosting with no shell access; the full requirements are in <a href="deployment-guide.html#requirements">DG·1</a>. Many cheap plans offer only MariaDB — check first</td>
+</tr>
+<tr>
+<td>Backups</td>
+<td>Somewhere off the server to keep database copies for 10–15 years</td>
+<td>The system makes none itself (<a href="admin-guide.html#backups">AG·1 §7</a>)</td>
+</tr>
+<tr>
+<td>Tablets</td>
+<td>One per group of chairs a nurse charts, plus spares; a modern browser</td>
+<td>Today every tablet syncs only while the app is open. When the background worker is built, Android browsers will be able to finish syncing in the background and iPads will not — so prefer Android</td>
+</tr>
+<tr>
+<td>Desk computers</td>
+<td>Any machine with a current browser, for the console</td>
+<td></td>
+</tr>
+<tr>
+<td>People</td>
+<td>An administrator a few hours a week, who is comfortable running SQL in phpMyAdmin; someone who can make an API call for the rare jobs without a screen</td>
+<td>Staff accounts, password resets and some settings are SQL today</td>
+</tr>
+<tr>
+<td>Training</td>
+<td>The user's guide (<a href="users-guide.html">UG·1</a>) is the curriculum</td>
+<td>Run paper alongside until the unit trusts it. The original design asked for a week of paperless shifts, including a deliberate network cut, before relying on the tablets</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="limits"><span class="secnum">4</span> What it does not do</h2>
+<p>Said plainly, so it is not discovered after go-live.</p>
+<ul>
+<li><strong>One unit only.</strong> No multi-site, no group reporting.</li>
+<li><strong>Haemodialysis only.</strong> No peritoneal dialysis workflow.</li>
+<li><strong>No staff management screens.</strong> Accounts, passwords and PINs are created with SQL; nobody can change their own password in the app.</li>
+<li><strong>Some work the system does has no screen yet:</strong> recording serology, changing a patient's status or details, writing prescriptions, setting standing patterns, giving medications, amending a signed record, machine and dialyzer logs, stock, and the quality and utilisation reports. Each exists behind the API and needs a technical person until its screen is built.</li>
+<li><strong>No one-off scheduling.</strong> Add-on sessions, reschedules and cancelled days have no screen or endpoint.</li>
+<li><strong>No appeals.</strong> A denied claim cannot be corrected and resubmitted as a new one inside the system.</li>
+<li><strong>No senior-citizen or PWD discount</strong> yet.</li>
+<li><strong>No integrations.</strong> No electronic claim submission, lab interface, scales, dialysis-machine link or patient portal.</li>
+<li><strong>The tablet must be online</strong> to check in, start or end a treatment, and it cannot start from cold without a network. Charting itself works offline.</li>
+<li><strong>The twice-daily safety sweep runs on the server's UTC clock</strong> — 14:00 and 02:00 in Manila — so someone checks the Controls screen each morning instead.</li>
+<li><strong>No independent assurance</strong> of any kind, as above.</li>
+</ul>
+<h2 id="fit"><span class="secnum">5</span> Who it suits, and who it does not</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Who it suits, and who it does not"><table>
+<thead>
+<tr>
+<th>It suits</th>
+<th>It does not suit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A single in-centre haemodialysis unit of roughly 10 to 40 chairs</td>
+<td>A group of units wanting one system across sites</td>
+</tr>
+<tr>
+<td>A Philippine unit billing PhilHealth, or one prepared to enter its own payers and rates</td>
+<td>A unit that needs Malaysian, Indonesian or Singaporean payer workflows ready on day one — the data model allows them, the reference data does not carry them</td>
+</tr>
+<tr>
+<td>A unit that dialyses on ordinary Wi-Fi and wants charting to survive outages</td>
+<td>A hospital that needs HL7 interfaces to an existing electronic record</td>
+</tr>
+<tr>
+<td>A unit that can run a full day on paper when it must, and back-enter afterwards</td>
+<td>A unit that cannot operate at all without the system</td>
+</tr>
+<tr>
+<td>A unit with an administrator willing to run SQL for accounts and settings</td>
+<td>A unit with no technical person at all</td>
+</tr>
+<tr>
+<td>A unit that wants its rules enforced and its exceptions written down</td>
+<td>A unit that wants a peritoneal dialysis programme in the same system</td>
+</tr>
+<tr>
+<td>A host offering MySQL 8</td>
+<td>A host offering only MariaDB</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="adopting"><span class="secnum">6</span> What adopting it involves</h2>
+<ol>
+<li><strong>Check the host</strong> — MySQL, not MariaDB, before anything else (<a href="deployment-guide.html">DG·1</a>).</li>
+<li><strong>Install it</strong> from the deployment bundle, with no shell needed.</li>
+<li><strong>Name every account</strong> after the one person who will hold it, and hand out sign-in slips in person.</li>
+<li><strong>Configure the room</strong>: chair cohorts, high-alert drugs, the timezone, the current benefit rate — and check the clinical thresholds against your own SOPs.</li>
+<li><strong>Train on the day</strong> with <a href="users-guide.html">UG·1</a>, and run paper alongside until the unit trusts it.</li>
+<li><strong>Arrange backups</strong> and prove one restores before the first real patient.</li>
+</ol>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>MK·1</span> Product overview · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>docs/src/marketing.md</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

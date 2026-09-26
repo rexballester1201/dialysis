@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="The dialysis day: what the system expects at each step, where it stops you and why. For ward staff.">
+<title>User&#039;s guide · UG·1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "UG·1 · User's guide · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html" aria-current="page"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">UG·1</span> User&#039;s guide</p><h1>The dialysis day</h1><p class="standfirst">One unit, four shifts, one record per treatment. This is what the system expects of
+  you at each point in the day, and — just as usefully — <strong>where it will stop
+  you, and why.</strong></p><dl class="control"><div><dt>Reference</dt><dd>UG·1</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>Ward staff — nurses, head nurses, technicians, nephrologists, billing — and whoever trains them.</dd></div><div><dt>Applies to</dt><dd>Ward use of the bedside tablet and the console, as built on 26 September 2026.</dd></div><div><dt>Source</dt><dd><code>docs/src/users-guide.html</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#the-shape-of-the-day">The shape of the day</a></li><li><a href="#who-does-what">Who does what</a></li><li><a href="#the-treatment-run">The treatment run</a></li><li><a href="#after-the-treatment">After the treatment</a></li><li><a href="#when-the-network-drops">When the network drops</a></li><li><a href="#stops-you-or-tells-you">Stops you, or tells you</a></li><li><a href="#what-the-system-will-not-let-go-of">What the system will not let go of</a></li><li><a href="#about-this-guide">About this guide</a></li></ol></nav>
+<article class="doc-body">
+<section class="block" id="shifts">
+  <h2 id="the-shape-of-the-day" class="rule">The shape of the day</h2>
+  <p class="lede">
+    Patients hold a standing pattern — a set of weekdays and a shift, such as Mon/Wed/Fri
+    on AM. The board for any date is generated from those patterns, so nobody rebuilds
+    the roster by hand each morning.
+  </p>
+  <div class="shifts">
+    <div class="shift">
+      <span class="code">AM · MORNING</span>
+      <span class="time">06:00 – 10:30</span>
+      <span class="days">Mon – Sat</span>
+    </div>
+    <div class="shift">
+      <span class="code">MID · MIDDAY</span>
+      <span class="time">10:45 – 15:15</span>
+      <span class="days">Mon – Sat</span>
+    </div>
+    <div class="shift">
+      <span class="code">PM · AFTERNOON</span>
+      <span class="time">15:30 – 20:00</span>
+      <span class="days">Mon – Sat</span>
+    </div>
+    <div class="shift">
+      <span class="code">NOC · NIGHT</span>
+      <span class="time">20:15 – 00:45</span>
+      <span class="days">Mon / Wed / Fri</span>
+    </div>
+  </div>
+  <div class="callout">
+    <span class="lbl">Turnaround</span>
+    <p>
+      The 15-minute gaps between shifts are the unit's turnaround window. A chair holds
+      one patient per shift per day, and the system will not let a second one be booked
+      into it — that refusal is the fifteen minutes protecting itself.
+    </p>
+  </div>
+</section>
+
+<section class="block" id="roles">
+  <h2 id="who-does-what" class="rule">Who does what</h2>
+  <p class="lede">
+    Your role decides what you can reach. These are not seniority tiers — a technician
+    can do things a nurse cannot, because the machines and the water are their job.
+  </p>
+  <div class="table-wrap" role="region" tabindex="0" aria-label="Table: Who does what"><table>
+      <thead>
+        <tr><th>Role</th><th>What it is for</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="role">nephrologist</td><td class="what">Prescribes. Countersigns treatment records. The only role that can amend a locked one.</td></tr>
+        <tr><td class="role">head_nurse</td><td class="what">Roster, scheduling, clinical oversight. Builds the day's board.</td></tr>
+        <tr><td class="role">nurse</td><td class="what">Runs sessions and charts the flow sheet. Signs as the delivering nurse.</td></tr>
+        <tr><td class="role">technician</td><td class="what">Machines, water testing, dialyzer reprocessing — their own permissions, not borrowed from nursing.</td></tr>
+        <tr><td class="role">billing</td><td class="what">Claims, invoices, payer follow-up. No clinical write access.</td></tr>
+        <tr><td class="role">records</td><td class="what">Registration and documents.</td></tr>
+        <tr><td class="role">dietitian</td><td class="what">Nutrition assessment. Nothing is built for it yet, so the role can read and cannot write.</td></tr>
+        <tr><td class="role">admin</td><td class="what">Unit settings and roles, registration, scheduling, the water log and billing. Cannot chart, sign or prescribe. The only role that can retire a patient record.</td></tr>
+        <tr><td class="role">readonly</td><td class="what">Audit and management view. Reads the clinical record and the unit's reports, writes nothing. Claims and invoices stay with billing.</td></tr>
+      </tbody>
+    </table></div>
+  <div class="callout">
+    <span class="lbl">On the tablet</span>
+    <p>
+      Sign in once with your password on the device you will use. After that a 6-digit
+      PIN unlocks it for the rest of the shift. Your login is bound to that tablet: if
+      the same credential appears on another device it is revoked rather than refused,
+      because a credential in two places has been copied.
+    </p>
+  </div>
+</section>
+
+<section class="block" id="run">
+  <h2 id="the-treatment-run" class="rule">The treatment run</h2>
+  <p class="lede">
+    These eight steps are a real sequence — the record cannot skip one, and the numbers
+    are the order the system enforces rather than a reading convenience. A square marks
+    each check it makes: <span class="key-stops">red stops you</span>,
+    <span class="key-warns">amber tells you something</span>,
+    <span class="key-note">teal is what gets recorded</span>.
+  </p>
+
+  <div class="stage">
+    <div class="gutter"><span class="num">0</span><span class="who">Technician<br>Before 06:00</span></div>
+    <div>
+      <h3 id="test-the-water">Test the water</h3>
+      <p>
+        Measure total chlorine and record it. No treatment in the day can start until
+        this exists — not as paperwork, but because chlorine passes straight through an
+        RO membrane and haemolyses across a dialyzer.
+      </p>
+      <ul class="checks">
+        <li class="stops"><span><b>Above 0.1 ppm total chlorine, the day does not open.</b> Correct the carbon beds and log a fresh check. There is no override for this one.</span></li>
+        <li class="stops"><span><b>No check at all is treated as a failure</b>, not as an unknown. An unmeasured carbon bed is not a safe one.</span></li>
+        <li><span>Conductivity, pH and the rest are recorded alongside for the trend. Only chlorine gates the day.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="gutter"><span class="num">1</span><span class="who">Head nurse<br>Start of shift</span></div>
+    <div>
+      <h3 id="generate-the-board">Generate the board</h3>
+      <p>
+        The day's chairs are built from the standing patterns. Each patient arrives on
+        the board carrying their infection-control cohort; their prescription and the
+        dry weight in force that day are attached when they are checked in.
+      </p>
+      <ul class="checks">
+        <li class="stops"><span><b>One chair, one patient, per shift, per day.</b> A double-booking is refused at the point of scheduling, not discovered at the bedside.</span></li>
+        <li><span>The board is built only from standing patterns. An add-on or a reschedule has no screen yet, so it goes through the administrator until one exists.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="gutter"><span class="num">2</span><span class="who">Nurse<br>On arrival</span></div>
+    <div>
+      <h3 id="check-in">Check in</h3>
+      <p>
+        Weigh the patient, then assign the chair and the machine. This is where
+        infection control is decided, so it is where most refusals happen.
+      </p>
+      <ul class="checks">
+        <li class="stops"><span><b>The chair must suit the cohort.</b> An HBV-positive patient cannot take a clean station.</span></li>
+        <li class="stops"><span><b>The machine must have been disinfected since its last patient of a different cohort.</b> Record the cycle and it clears at once.</span></li>
+        <li class="warns"><span>You are told how many runs the machine has done since it was last cleaned. That one does not stop you — your unit sets the interval, not the software.</span></li>
+        <li><span>The pre-dialysis weight sets the UF goal against the dry weight in force today.</span></li>
+      </ul>
+      <div class="callout">
+        <span class="lbl">If there is genuinely no compliant chair</span>
+        <p>
+          Infection control accepts an override with a written reason of at least ten
+          characters, because a rule with no way through gets worked around outside the
+          system, where nothing records it at all. The override is written onto the chart
+          as an <strong>INFECTION CONTROL OVERRIDE</strong> note and into the audit trail.
+          Write a reason that will still mean something in a year.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="gutter"><span class="num">3</span><span class="who">Nurse<br>On the needle</span></div>
+    <div>
+      <h3 id="start">Start</h3>
+      <p>
+        Starting stamps the time the treatment actually began. Everything downstream —
+        duration, UF rate, adequacy — is measured from it, so it is recorded as it
+        happens rather than estimated afterwards.
+      </p>
+      <ul class="checks">
+        <li class="stops"><span><b>The day's water check must be on file and passing.</b></span></li>
+        <li class="stops"><span><b>The machine must be in service.</b> One marked under repair, quarantined or retired is unavailable whatever the board says.</span></li>
+        <li class="stops"><span><b>The pre-dialysis weight must be recorded.</b> Without it the UF goal is derived from nothing.</span></li>
+        <li class="stops"><span><b>The dialyzer must be this patient's own</b>, above 80% of its original total cell volume, and within its reuse count. It is checked when its label is entered at the start.</span></li>
+        <li><span>Draw the pre-dialysis BUN now if adequacy is being measured this session. The post sample at step 5 is useless on its own.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="gutter"><span class="num">4</span><span class="who">Nurse<br>Every 30 min</span></div>
+    <div>
+      <h3 id="chart-the-run">Chart the run</h3>
+      <p>
+        Observations and events go onto the flow sheet as they happen; medication doses
+        will too, once their screen exists. The flow sheet is <strong>append-only</strong>
+        — nothing is edited in place, which is what lets a tablet that has been offline
+        and a desk that has not both chart the same session without ever colliding.
+      </p>
+      <ul class="checks">
+        <li><span>Each observation is keyed to the time it was taken. A correction is a <b>new entry at the real time</b>, not an edit, and both stay on the record.</span></li>
+        <li class="stops"><span><b>High-alert medications need a witness</b>, and the witness cannot be the person giving the dose. A second check by the same person is not a second check.</span></li>
+        <li class="stops"><span><b>Event codes come from a fixed list.</b> A typo would create a category no report ever counts, so it is refused rather than quietly stored.</span></li>
+        <li><span>A dose not given is recorded as not given, with a reason. A blank is not the same fact.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="gutter"><span class="num">5</span><span class="who">Nurse<br>Off the needle</span></div>
+    <div>
+      <h3 id="end">End</h3>
+      <p>
+        Record the end time, the post-dialysis weight, and the post BUN if adequacy is
+        being measured. The system then does the arithmetic itself.
+      </p>
+      <ul class="checks">
+        <li><span><b>Kt/V and URR are calculated by the server</b> from the BUN samples. The tablet never sends a figure of its own, and when both samples are recorded any figure sent from elsewhere is replaced — a chart holding a Kt/V that disagrees with its own blood results is one that will be believed and is wrong.</span></li>
+        <li><span>A Kt/V from the machine's own online-clearance sensor is a measurement, not an estimate, and is kept exactly as recorded.</span></li>
+        <li><span>Interdialytic weight gain, fluid removed and actual duration are derived from what you entered, never typed in.</span></li>
+        <li class="warns"><span>A UF rate above roughly 13 ml/kg/h is flagged for review. It is a marker, not a verdict — the clinical call is yours.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="gutter"><span class="num">6</span><span class="who">Nurse, then<br>nephrologist</span></div>
+    <div>
+      <h3 id="sign">Sign</h3>
+      <p>
+        The nurse attests to what was delivered; the nephrologist countersigns. When both
+        signatures are in, <strong>the record locks</strong> and becomes the account of
+        what happened.
+      </p>
+      <ul class="checks">
+        <li class="stops"><span><b>An incomplete record cannot be signed.</b> Both weights, both times and a named primary nurse must be present, and the refusal names the missing fields.</span></li>
+        <li class="stops"><span><b>The countersignature needs the nephrologist role</b>, so a nurse cannot countersign as the nephrologist. The system does not compare the two names, so no account should hold both roles.</span></li>
+        <li><span>After locking, only the billing fields stay writable. The clinical record does not move again.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="gutter"><span class="num">7</span><span class="who">Nephrologist<br>If needed</span></div>
+    <div>
+      <h3 id="amend-if-something-was-wrong">Amend, if something was wrong</h3>
+      <p>
+        A locked record still has one way in. The nephrologist amends it with a reason;
+        the original values are preserved, the reason becomes a session note, and the
+        before-and-after pair goes to the audit log. <strong>The record stays locked.</strong>
+      </p>
+      <ul class="checks">
+        <li class="stops"><span><b>An amendment without a reason is refused.</b> Otherwise it is indistinguishable from someone quietly fixing a number.</span></li>
+        <li><span>Amending is the only path in. There is no edit mode, no unlock, and no administrative back door.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="billing">
+  <h2 id="after-the-treatment" class="rule">After the treatment</h2>
+  <p class="lede">
+    Billing runs off signed records and nothing else. Two documents come out of a
+    session: a <strong>claim</strong>, which is what the payer is asked for, and an
+    <strong>invoice</strong>, which is whatever is left for the patient.
+  </p>
+  <ol class="plain">
+    <li><b>Generate the claim</b> from signed sessions. A session already on another claim stops the whole batch — a claim covering four of six sessions is worse than none, because someone then has to work out which two are missing.</li>
+    <li><b>The rate is not in the software.</b> It is read from the benefit programme in force on the service date. The PhilHealth case rate has moved ₱2,600 → ₱4,000 → ₱6,350 and the annual allotment 90 → 156; superseded programmes stay on file so an old claim re-prices against what applied at the time.</li>
+    <li><b>Submit, then record the remittance</b> exactly as the payer's advice states it. The claim's status follows the money — it cannot read "paid" while the figures say short-paid or denied. An approval of zero is a denial, and a denial needs a code or nobody can resubmit it.</li>
+    <li><b>The invoice covers the balance</b>, unless the programme forbids balance billing — in which case the patient's share is zero, whatever the list price came to.</li>
+  </ol>
+  <div class="callout">
+    <span class="lbl">Watch the allotment</span>
+    <p>
+      You are told how many sessions of the annual allotment remain before you run out,
+      not after. A patient discovering mid-year that their cover was exhausted last month
+      is the failure this exists to prevent.
+    </p>
+  </div>
+</section>
+
+<section class="block" id="offline">
+  <h2 id="when-the-network-drops" class="rule">When the network drops</h2>
+  <p class="lede">
+    The bedside tablet is built to lose connectivity and carry on. This is the part of
+    the system the unit depends on most, so it is worth knowing exactly what it promises.
+  </p>
+  <ul class="plain">
+    <li><b>Nothing you chart is lost.</b> Every entry is written to the tablet first and sent when the network returns. The queue on the device is the authoritative copy; the patient list it shows you is only a cache.</li>
+    <li><b>Nothing is charted twice.</b> Each entry carries an identifier minted on the device, so a batch that gets resent returns the stored answer without touching a clinical record again.</li>
+    <li><b>One bad entry cannot sink the rest.</b> Each is processed on its own, so a nurse never loses four hours of charting to a single malformed row.</li>
+    <li><b>An expired login does not discard the queue.</b> Unlock with your PIN and the same batch replays.</li>
+    <li><b>Conflicts are reported, not resolved silently.</b> If a session locked while you were offline, your entry comes back to you as a conflict rather than being dropped or forced through.</li>
+    <li><b>Check-in, start and end wait for the network.</b> They are where the water, chair, machine and dialyzer checks run, and a refusal is only worth anything before the needle goes in — so the tablet offers them only while it is connected.</li>
+  </ul>
+  <div class="callout hard">
+    <span class="lbl">The one thing to check</span>
+    <p>
+      Before you put the tablet down at the end of a shift, confirm the outbox has
+      drained. Charting that never left the device is still charting nobody else can see.
+    </p>
+  </div>
+</section>
+
+<section class="block" id="reference">
+  <h2 id="stops-you-or-tells-you" class="rule">Stops you, or tells you</h2>
+  <p class="lede">
+    The distinction matters at six in the morning. A stop needs something physical done
+    about it; a warning needs your judgement. Nothing in this system blurs the two.
+  </p>
+  <div class="table-wrap" role="region" tabindex="0" aria-label="Table: Stops you, or tells you"><table>
+      <thead>
+        <tr><th>Situation</th><th>Result</th><th>What clears it</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Total chlorine above 0.1 ppm</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Correct the carbon beds, log a new check</td></tr>
+        <tr><td>No water check logged today</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Test and record</td></tr>
+        <tr><td>Chair does not match the cohort</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Move the patient, or override with a reason</td></tr>
+        <tr><td>Machine not disinfected since a different cohort</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Run the cycle, record it</td></tr>
+        <tr><td>Machine out of service</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Use another; biomed returns it to service</td></tr>
+        <tr><td>Dialyzer below 80% TCV, over its count, or another patient's</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Issue a different unit</td></tr>
+        <tr><td>Chair already taken for that shift</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Choose another chair or shift</td></tr>
+        <tr><td>High-alert drug without a witness</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">A second nurse witnesses</td></tr>
+        <tr><td>Signing an incomplete record</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Fill the fields it names</td></tr>
+        <tr><td>Editing a locked record</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Nephrologist amends with a reason</td></tr>
+        <tr><td>Billing an unsigned or already-claimed session</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Sign it, or find the existing claim</td></tr>
+        <tr><td>A claim for more sessions than the allotment has left</td><td class="verdict"><span class="tag stops">Stops</span></td><td class="what">Claim fewer, and plan the remainder with the patient</td></tr>
+        <tr><td>Runs on a machine since its last disinfection</td><td class="verdict"><span class="tag warns">Tells you</span></td><td class="what">Your unit's interval, your call</td></tr>
+        <tr><td>UF rate above ~13 ml/kg/h</td><td class="verdict"><span class="tag warns">Tells you</span></td><td class="what">Clinical review</td></tr>
+        <tr><td>Kt/V below 1.2 or URR below 65%</td><td class="verdict"><span class="tag warns">Tells you</span></td><td class="what">Prescription review</td></tr>
+      </tbody>
+    </table></div>
+</section>
+
+<section class="block" id="permanent">
+  <h2 id="what-the-system-will-not-let-go-of" class="rule">What the system will not let go of</h2>
+  <p class="lede">
+    Some things are deliberately impossible. Knowing which saves you hunting for a
+    setting that does not exist.
+  </p>
+  <ul class="plain">
+    <li><b>Chart views are logged</b> — who opened whose record, and when. That is a different question from who changed what, and it is the one privacy regulators actually ask.</li>
+    <li><b>Nothing clinical is hard-deleted.</b> Retiring a patient is a soft delete an administrator performs; the sessions, claims and audit trail all still point at the record.</li>
+    <li><b>Dry weight is effective-dated.</b> Setting a new one does not rewrite last month's fluid figures, because each session recorded the target in force on its own day.</li>
+    <li><b>Patient status is a history, not a field.</b> "When did this patient transfer out?" has to be answerable years later, and a single current-status column cannot answer it.</li>
+    <li><b>A patient has exactly one active prescription.</b> Writing a new one closes the previous one on the same date; two overlapping prescriptions cannot exist.</li>
+    <li><b>Twice a day the system re-reads its own safety views</b> looking for anything that slipped past — a cohort mismatch, an overdue dialyzer, a water exception — and reports what it finds; the Controls screen on the console shows the same list at any time. The report reaches a person only if the unit has wired it to one. A check nobody reads is not a check.</li>
+  </ul>
+</section>
+
+<section class="block" id="about">
+  <h2 id="about-this-guide" class="rule">About this guide</h2>
+  <p>
+    <strong>Where each step happens.</strong> The water check, the daily board, the patient
+    chart, signing, claims and invoices are on the console. Check-in, start, end and the
+    flow sheet are on the bedside tablet. Medication doses and amendments have no screen
+    yet: the system enforces the witness rule and the amendment rule described above, but
+    neither can be exercised from either app today.
+  </p>
+  <p>
+    <strong>Clinical figures cited.</strong> Total chlorine 0.1 ppm (AAMI/ISO 23500);
+    Kt/V ≥ 1.2 and URR ≥ 65% (KDOQI 2015); dialyzer TCV floor 80% of new; UF-rate concern
+    threshold ~13 ml/kg/h. Benefit rates and session allotments are configuration, not
+    code. Verify every one against your unit's standard operating procedures and the
+    current payer circular before go-live.
+  </p>
+  <p>
+    <strong>Companion documents.</strong> "Why It Stopped You" (<a href="faq.html">faq.html</a>)
+    answers specific on-screen messages one at a time. It was written on 20 August 2026,
+    before the screens existed, and is kept as it was written; the
+    <a href="troubleshooting.html">troubleshooting guide</a> covers the same messages as
+    the system behaves today.
+  </p>
+  <p><strong>Corrections in this issue.</strong> The text is the 20 August 2026 guide's. These statements were changed because the system behaves differently from how they described it:</p>
+  <ol class="plain">
+    <li><b>Who does what:</b> the <code>admin</code> row said "user management and full access" — an administrator cannot chart, sign or prescribe, and grants roles but cannot create accounts in the app. The <code>dietitian</code> and <code>readonly</code> rows now say what those roles can actually reach.</li>
+    <li><b>Step 0:</b> "nothing else in the day can begin" became "no treatment can start" — the board and check-in do not wait for the water check; the first start does.</li>
+    <li><b>Step 1:</b> the board carries the cohort, not the prescription and dry weight (those attach at check-in), and add-ons and reschedules have no screen.</li>
+    <li><b>Steps 2 and 3:</b> the dialyzer is assigned and checked at the start, not at check-in, so that check moved to step 3.</li>
+    <li><b>Step 4:</b> medication doses have no screen yet.</li>
+    <li><b>Step 5:</b> a Kt/V sent from outside the tablet is replaced only when both BUN samples are recorded.</li>
+    <li><b>Step 6:</b> "one person cannot supply both signatures" — the system separates the signatures by role, not by person.</li>
+    <li><b>Offline:</b> added that check-in, start and end need the network.</li>
+    <li><b>Stops you, or tells you:</b> "annual allotment nearly spent" stops nothing; a claim larger than what remains does.</li>
+    <li><b>Twice a day:</b> the report "alerts a person" only if the unit has wired it to one, and the Controls screen shows the same list.</li>
+    <li><b>About this guide:</b> the note that there were "no screens yet" was replaced by where each step now happens.</li>
+  </ol>
+</section>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>UG·1</span> User&#039;s guide · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>docs/src/users-guide.html</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

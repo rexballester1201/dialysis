@@ -1,0 +1,1131 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="Symptoms, causes and actions by area, the four places answers are kept, wrong-data procedure and worst-case recovery for the Dialysis Centre System.">
+<title>Troubleshooting guide · TG·1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "TG·1 · Troubleshooting guide · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html" aria-current="page"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">TG·1</span> Troubleshooting guide</p><h1>When something is wrong</h1><p class="standfirst">Where the answers are kept, what each symptom means and what to do about it — area by area — and what to do when the data itself is wrong.</p><dl class="control"><div><dt>Reference</dt><dd>TG·1</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>The administrator or developer on call.</dd></div><div><dt>Applies to</dt><dd>A live installation, and a development copy.</dd></div><div><dt>Source</dt><dd><code>docs/src/troubleshooting.md</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#where-answers"><span class="secnum">1</span> Where the answers are</a></li><li><a href="#sign-in"><span class="secnum">2</span> Signing in and tablets</a></li><li><a href="#water"><span class="secnum">3</span> The morning water check</a></li><li><a href="#check-in-start"><span class="secnum">4</span> Check-in and start</a></li><li><a href="#charting"><span class="secnum">5</span> Charting and ending</a></li><li><a href="#signing"><span class="secnum">6</span> Signing and amending</a></li><li><a href="#billing"><span class="secnum">7</span> Billing</a></li><li><a href="#sync"><span class="secnum">8</span> Offline and sync</a></li><li><a href="#settings"><span class="secnum">9</span> Settings and accounts</a></li><li><a href="#install"><span class="secnum">10</span> After installing or upgrading</a></li><li><a href="#times"><span class="secnum">11</span> Times and dates look wrong</a></li><li><a href="#jobs"><span class="secnum">12</span> Reports and scheduled jobs</a></li><li><a href="#wrong-data"><span class="secnum">13</span> When the data is wrong</a></li><li><a href="#worst-case"><span class="secnum">14</span> The worst case</a></li></ol></nav>
+<article class="doc-body">
+<h2 id="where-answers"><span class="secnum">1</span> Where the answers are</h2>
+<p>Almost every problem in this system has already been written down somewhere by the system itself. Look in these four places before guessing.</p>
+<ol>
+<li><strong>The message on the screen.</strong> A refusal is the system working, and it says which rule fired and what clears it — for example <em>&quot;Total chlorine is 0.15 ppm, above the 0.1 ppm action limit. Do not dialyse until the carbon beds are corrected and a passing check is logged.&quot;</em> The screens show the server's message word for word. Read it to the end before doing anything else; the sections below are organised by these messages.</li>
+<li><strong>The Controls screen</strong> on the console (the same list <code>php artisan dialysis:check-controls</code> prints): infection-control breaches on today's and later sessions, dialyzers that must not be issued again, and water exceptions from the last 90 days.</li>
+<li><strong>The Laravel log</strong>, <code>storage/logs/laravel-YYYY-MM-DD.log</code> on the server (File Manager on cPanel), one file a day, kept 14 days. A 500 error leaves its cause here. So do <em>sync operation failed</em> (charting from a tablet that was refused, with the reason) and <em>Detective controls found violations</em>.</li>
+<li><strong>The database's own records</strong> (<a href="admin-guide.html#audit">AG·1 §6</a>): <code>audit_logs</code> for who changed what, <code>session_notes</code> for amendments and overrides, <code>login_events</code> for every sign-in attempt, <code>sync_batches</code> for every tablet upload and its verdicts, and <code>GET /api/v1/health</code> for the state of the installation itself.</li>
+</ol>
+<p>Each table below reads <strong>symptom → cause → action</strong>. Quoted text is the system's own message; <em>{braces}</em> mark the parts that change.</p>
+<h2 id="sign-in"><span class="secnum">2</span> Signing in and tablets</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Signing in and tablets"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;These credentials do not match our records.&quot;</td>
+<td>The employee number (or email) or the password is wrong. The message does not say which, on purpose</td>
+<td>Check the employee number on the person's slip. After five failures the account locks</td>
+</tr>
+<tr>
+<td>&quot;This account is temporarily locked.&quot;</td>
+<td>Five failed sign-ins or PINs in a row</td>
+<td>It clears itself after 15 minutes, or the administrator clears it (<a href="admin-guide.html#people">AG·1 §2</a>)</td>
+</tr>
+<tr>
+<td>&quot;This account is not active.&quot;</td>
+<td>The account was deactivated</td>
+<td>The administrator reactivates it only if the person is back; otherwise they use their own account</td>
+</tr>
+<tr>
+<td>&quot;This PIN is not valid on this device.&quot;</td>
+<td>Wrong PIN — or the account is inactive or unknown</td>
+<td>Re-enter it. Failures count toward the lock</td>
+</tr>
+<tr>
+<td>&quot;This device has not been signed in with a password for this user.&quot;</td>
+<td>A PIN works only on a tablet where that person has signed in with their password at least once</td>
+<td>Sign in with the password on this tablet, then use the PIN</td>
+</tr>
+<tr>
+<td>&quot;This token was issued to a different device and has been revoked.&quot;</td>
+<td>A sign-in token arrived from a device other than the one it was issued to — copied, cloned, or sent by a client that left off the device header</td>
+<td>Sign in again with the password. If it recurs on one tablet, its app data was restored from another device</td>
+</tr>
+<tr>
+<td>Signed out after a long shift</td>
+<td>Tokens last 12 hours</td>
+<td>Unlock with the PIN; nothing queued is lost</td>
+</tr>
+<tr>
+<td>&quot;Too Many Attempts&quot;</td>
+<td>More than five password sign-ins, or ten PIN attempts, in one minute</td>
+<td>Wait a minute</td>
+</tr>
+<tr>
+<td>The tablet shows nothing after a restart with no network</td>
+<td>The app cannot start from cold offline: its service worker is not built yet</td>
+<td>Keep the app open during the shift. It needs the network once to load</td>
+</tr>
+<tr>
+<td>Nobody can change their own password</td>
+<td>Not built</td>
+<td>The administrator resets it (<a href="admin-guide.html#people">AG·1 §2</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="water"><span class="secnum">3</span> The morning water check</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The morning water check"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;No water check has been logged for <em>{date}</em>. Record a total-chlorine reading on the Water screen before the first treatment.&quot;</td>
+<td>No check for the unit's day — or the unit's timezone is wrong, so &quot;today&quot; is a different day</td>
+<td>Record the check on the Water screen. If one was recorded and this still appears, check the timezone (<a href="#times">§11</a>)</td>
+</tr>
+<tr>
+<td>&quot;The water check for <em>{date}</em> did not record total chlorine.&quot;</td>
+<td>The latest check left chlorine blank</td>
+<td>Record a check with total chlorine</td>
+</tr>
+<tr>
+<td>&quot;Total chlorine is <em>{x}</em> ppm, above the 0.1 ppm action limit. Do not dialyse until the carbon beds are corrected and a passing check is logged.&quot;</td>
+<td>The latest check failed</td>
+<td>Correct the carbon beds, re-test, record the passing check. There is no override</td>
+</tr>
+<tr>
+<td>&quot;This reading is above the 0.1 ppm action limit. Say what was done about it…&quot;</td>
+<td>A failing reading must carry the action taken</td>
+<td>Write what was done, even &quot;stopped, carbon tank being changed&quot;</td>
+</tr>
+<tr>
+<td>&quot;A water check cannot be recorded for a time that has not happened yet (…).&quot;</td>
+<td>The time given is more than two minutes ahead of the server's clock — usually the device's clock, or a time entered in the wrong zone</td>
+<td>Correct the device's clock, or leave the time empty to use now</td>
+</tr>
+<tr>
+<td>The Water screen offers no water system</td>
+<td>No active water system is on file</td>
+<td>Add or re-activate one with SQL (<a href="admin-guide.html#read-only">AG·1 §3</a>)</td>
+</tr>
+<tr>
+<td>A re-test failed at noon, yet the 13:00 start was allowed</td>
+<td>By design for now: once a passing check exists for the day, later starts are allowed. The Water screen says so in words</td>
+<td>Decide clinically whether to proceed. Whether the system should stop it is an open question (<a href="design-spec.html#open-questions">DS·1 §9</a>)</td>
+</tr>
+<tr>
+<td>Only some staff can record a check</td>
+<td>Recording is limited to technician, head nurse and admin; everyone can see the clearance</td>
+<td>Ask one of them</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="check-in-start"><span class="secnum">4</span> Check-in and start</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Check-in and start"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;Station <em>{S-01}</em> is not designated for the <em>{HBV}</em> cohort.&quot;</td>
+<td>The chair's cohorts do not include the patient's</td>
+<td>Move the patient to a suitable chair. If none is usable, override with a reason of at least ten characters</td>
+</tr>
+<tr>
+<td>&quot;Machine <em>{M-0042}</em> is dedicated to a different cohort.&quot;</td>
+<td>The machine is reserved for another cohort</td>
+<td>Use another machine, or override with a reason</td>
+</tr>
+<tr>
+<td>&quot;That machine last treated a <em>{hbv}</em> patient and has had no disinfection cycle since.&quot;</td>
+<td>Cohort carry-over: no disinfection recorded after a patient of another cohort</td>
+<td>Disinfect the machine and record it — which today is an API call (<code>POST /api/v1/machines/{machine}/disinfection</code>), not a screen. Otherwise use another machine or override</td>
+</tr>
+<tr>
+<td>&quot;Machine <em>{M-0042}</em> is <em>{under_repair}</em> and cannot be used.&quot;</td>
+<td>Only machines in service or on standby can be used</td>
+<td>Use another. Returning it to service is a maintenance record through the API</td>
+</tr>
+<tr>
+<td>&quot;Record the pre-dialysis weight before starting; the UF goal depends on it.&quot;</td>
+<td>No pre-dialysis weight on the session</td>
+<td>Weigh the patient and enter it at check-in</td>
+</tr>
+<tr>
+<td>&quot;A session that is <em>{scheduled}</em> cannot become <em>{in_progress}</em>. Expected one of: <em>{checked_in}</em>.&quot;</td>
+<td>Steps out of order</td>
+<td>Do the missing step. The order is check-in, start, end</td>
+</tr>
+<tr>
+<td>&quot;Dialyzer <em>{DZ-0041}</em> belongs to <em>{MRN}</em> and must never be used on another patient.&quot;</td>
+<td>The label scanned is another patient's unit</td>
+<td>Use this patient's own unit</td>
+</tr>
+<tr>
+<td>&quot;Dialyzer <em>{DZ-0041}</em> is at <em>{74.5}</em>% of its original total cell volume, below the 80% minimum. Discard it.&quot;</td>
+<td>Volume below the floor</td>
+<td>Discard it and issue another</td>
+</tr>
+<tr>
+<td>&quot;Dialyzer <em>{DZ-0041}</em> has been used <em>{6}</em> times and its limit is <em>{6}</em>. Discard it.&quot;</td>
+<td>Reuse count spent</td>
+<td>Discard it and issue another</td>
+</tr>
+<tr>
+<td>The same infection-control breach needs a second reason at the start</td>
+<td>The start re-checks deliberately; an override at check-in does not carry forward</td>
+<td>Give the reason again; it leaves a second note. Whether it should carry is an open question</td>
+</tr>
+<tr>
+<td>The chair turns out to be wrong at the start</td>
+<td>A chair cannot be changed after check-in; the start takes no chair</td>
+<td>Override with the reason, or have the session corrected outside the app</td>
+</tr>
+<tr>
+<td>Check-in, start and end are greyed out on the tablet</td>
+<td>The tablet is offline; these steps need the network</td>
+<td>Reconnect. Charting still works offline</td>
+</tr>
+<tr>
+<td>A number of runs &quot;since last disinfection&quot; appears</td>
+<td>A hygiene note, not a refusal; the interval is the unit's policy</td>
+<td>Follow the unit's SOP</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="charting"><span class="secnum">5</span> Charting and ending</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Charting and ending"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;An observation for this session at that time is already recorded.&quot;</td>
+<td>One observation per session per time; a second at the same minute is a duplicate</td>
+<td>To correct a reading, add a new one at the real time. Both stay on the record</td>
+</tr>
+<tr>
+<td>&quot;This event is already recorded.&quot;</td>
+<td>The same event was sent twice</td>
+<td>Nothing — it is on the record once</td>
+</tr>
+<tr>
+<td>An event code is rejected</td>
+<td>Codes come from a fixed list (<code>event_refs</code>)</td>
+<td>Pick from the list; adding a code is SQL (<a href="admin-guide.html#read-only">AG·1 §3</a>)</td>
+</tr>
+<tr>
+<td>&quot;Session <em>{id}</em> was signed and locked at <em>{time}</em>. Corrections go through the amendment path.&quot;</td>
+<td>The record locked while this device was working on it</td>
+<td>A nephrologist amends it (<a href="#signing">§6</a>)</td>
+</tr>
+<tr>
+<td>&quot;<em>{Drug}</em> is a high-alert medication and requires a witness.&quot; / &quot;…the nurse giving it cannot witness their own dose.&quot;</td>
+<td>Witness rule — reachable through the API only, since doses have no screen yet</td>
+<td>Record a witness who is not the giver</td>
+</tr>
+<tr>
+<td>The Kt/V shown after the end differs from the tablet's own estimate</td>
+<td>The stored figure is the server's, from the BUN samples</td>
+<td>None; the server's is the one of record</td>
+</tr>
+<tr>
+<td>No Kt/V or URR after the end</td>
+<td>Both BUN samples were not recorded, or the start time, post weight or UF was missing</td>
+<td>Adequacy needs pre- and post-BUN; Kt/V also needs the weights, UF and times</td>
+</tr>
+<tr>
+<td>&quot;The planned ultrafiltration rate is above 13 ml/kg/h…&quot; on the flow sheet</td>
+<td>A marker for review, not a refusal</td>
+<td>Clinical judgement</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="signing"><span class="secnum">6</span> Signing and amending</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Signing and amending"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;Cannot sign, missing: <em>{post_weight_kg, ended_at}</em>.&quot;</td>
+<td>A record cannot be signed incomplete</td>
+<td>Fill what it names. Once a session has ended there is no edit before signing — see the last row</td>
+</tr>
+<tr>
+<td>&quot;Session <em>{id}</em> is already locked.&quot;</td>
+<td>Both signatures are in</td>
+<td>Corrections are amendments</td>
+</tr>
+<tr>
+<td>The countersign button is missing or refused</td>
+<td>Only a <code>nephrologist</code> may countersign, and only once</td>
+<td>Check the account's roles in Settings</td>
+</tr>
+<tr>
+<td>No record in the unit ever locks</td>
+<td>There is no nephrologist account</td>
+<td>Create one (<a href="admin-guide.html#people">AG·1 §2</a>)</td>
+</tr>
+<tr>
+<td>&quot;Session is not locked; edit it normally.&quot;</td>
+<td>An amendment was sent for an unlocked session</td>
+<td>Use the normal step</td>
+</tr>
+<tr>
+<td>&quot;An amendment requires a reason.&quot;</td>
+<td>Blank reason</td>
+<td>Give one that will mean something in a year</td>
+</tr>
+<tr>
+<td>&quot;Cannot amend: <em>{patient_id}</em>&quot;</td>
+<td>Identity fields and the lock time are never amendable</td>
+<td>A session charted against the wrong patient needs clinical and records review, not an amendment</td>
+</tr>
+<tr>
+<td>A value on an ended but unsigned session is wrong</td>
+<td>The system has no edit between the end and the signatures</td>
+<td>Complete both signatures, then a nephrologist amends it with a reason — today through the API (<code>POST /api/v1/sessions/{session}/amend</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="billing"><span class="secnum">7</span> Billing</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Billing"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;Session <em>{id}</em> is not signed. Only a locked record may be claimed.&quot;</td>
+<td>Unsigned</td>
+<td>Get both signatures</td>
+</tr>
+<tr>
+<td>&quot;Session <em>{id}</em> is marked not billable.&quot;</td>
+<td>The session was flagged not billable</td>
+<td>Check why before changing it</td>
+</tr>
+<tr>
+<td>&quot;Session <em>{id}</em> is <em>{aborted}</em>; only a completed treatment is claimable.&quot;</td>
+<td>Aborted runs are not claimed</td>
+<td>None</td>
+</tr>
+<tr>
+<td>&quot;Session <em>{id}</em> is already on claim <em>{CLM-…}</em>.&quot;</td>
+<td>Invariant 6</td>
+<td>Open that claim</td>
+</tr>
+<tr>
+<td>&quot;No benefit program is effective on <em>{date}</em> for modality hd.&quot;</td>
+<td>No programme covers that date</td>
+<td>Add the programme in force then (<a href="admin-guide.html#benefit-rate">AG·1 §3</a>)</td>
+</tr>
+<tr>
+<td>&quot;This claim mixes benefit programs…&quot; / &quot;This claim spans two benefit periods…&quot;</td>
+<td>One claim covers one programme and one period</td>
+<td>Split it: one claim per programme and period</td>
+</tr>
+<tr>
+<td>&quot;This claim covers <em>{n}</em> session(s) but only <em>{m}</em> of the <em>{k}</em> allotted remain in the period ending <em>{date}</em>.&quot;</td>
+<td>Allotment</td>
+<td>Claim no more than remain; plan the rest with the patient</td>
+</tr>
+<tr>
+<td>&quot;A claim approved at zero is a denial, and a denial needs a code to resubmit against.&quot;</td>
+<td>Zero approved, no denial code</td>
+<td>Enter the payer's denial code from the advice</td>
+</tr>
+<tr>
+<td>&quot;Claim <em>{no}</em> has gone to the payer, so it cannot go back to draft or ready, or be voided…&quot;</td>
+<td>Voiding a submitted claim would free its sessions to be billed twice</td>
+<td>Record what the payer does instead</td>
+</tr>
+<tr>
+<td>&quot;A claim becomes <em>{paid}</em> when the payer's remittance is recorded…&quot;</td>
+<td>Approved, partially paid and paid follow the money</td>
+<td>Record the remittance</td>
+</tr>
+<tr>
+<td>&quot;Claim <em>{no}</em> was denied. An appeal is not something this system records yet…&quot;</td>
+<td>No appeal path</td>
+<td>Handle the appeal outside the system; the denial code is on the claim</td>
+</tr>
+<tr>
+<td>&quot;Invoice <em>{no}</em> is <em>{void}</em> and takes no payments.&quot;</td>
+<td>The invoice is void or not issued</td>
+<td>Issue it first, or work on the current invoice</td>
+</tr>
+<tr>
+<td>&quot;Session <em>{id}</em> is already on invoice <em>{no}</em>.&quot;</td>
+<td>One invoice per session</td>
+<td>Open that invoice</td>
+</tr>
+<tr>
+<td>The invoice says the patient owes nothing</td>
+<td>The programme forbids balance billing</td>
+<td>Correct; nothing to do</td>
+</tr>
+<tr>
+<td>An invoice charged the full list price</td>
+<td>It was drafted before the session was claimed; the screen warns</td>
+<td>Claim first, then invoice</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="sync"><span class="secnum">8</span> Offline and sync</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Offline and sync"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The outbox count on the tablet does not fall</td>
+<td>No network, an expired sign-in waiting for the PIN, or the server is down</td>
+<td>Reconnect; unlock with the PIN if asked; check <code>/api/v1/health</code>. The tablet retries every 30 seconds and when the network returns</td>
+</tr>
+<tr>
+<td>An entry comes back <strong>conflict</strong>: &quot;Session was signed on another device…&quot;</td>
+<td>The record locked while the tablet was offline</td>
+<td>If the entry is still right, a nephrologist amends the record</td>
+</tr>
+<tr>
+<td>An entry comes back <strong>conflict</strong>: &quot;This treatment was ended while this device was offline…&quot;</td>
+<td>Adequacy was computed from the values present at the end</td>
+<td>Sign, then amend if the entry was right</td>
+</tr>
+<tr>
+<td>An entry comes back <strong>rejected</strong>: &quot;Not applied. An offline update cannot change <em>{…}</em>.&quot;</td>
+<td>A lifecycle, chair, machine, dialyzer, adequacy, dry-weight or signature field was sent offline</td>
+<td>Those go through check-in, start and end online. If the tablet did this on its own, it is a client bug — report it</td>
+</tr>
+<tr>
+<td><strong>Rejected</strong>: &quot;Unknown operation type: <em>{…}</em>&quot;</td>
+<td>The tablet's app is newer or older than the server</td>
+<td>Reload the app from the server; update both together</td>
+</tr>
+<tr>
+<td><strong>Rejected</strong>: &quot;Unknown session&quot;</td>
+<td>The session is not on this server — the tablet was set up against another installation</td>
+<td>Sign in to the right server</td>
+</tr>
+<tr>
+<td>A tablet's entries are missing on the console</td>
+<td>The outbox has not drained</td>
+<td>Check the tablet's sync bar before it is put away. Charting still on the device is charting nobody else can see</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="settings"><span class="secnum">9</span> Settings and accounts</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Settings and accounts"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;You are the only administrator. Give someone else the admin role before removing your own.&quot;</td>
+<td>The last admin cannot remove their own role</td>
+<td>Grant <code>admin</code> to another person first</td>
+</tr>
+<tr>
+<td>Clearing a chair's last cohort asks for a reason</td>
+<td>A chair with no cohorts accepts every patient, including HBV</td>
+<td>Only clear it if that is what you mean</td>
+</tr>
+<tr>
+<td>A setting you need is not on the screen</td>
+<td>Shifts, chairs, machines, water systems, reference lists and payers are SQL for now</td>
+<td><a href="admin-guide.html#read-only">AG·1 §3</a></td>
+</tr>
+<tr>
+<td>&quot;The code <em>{X}</em> is already used by another programme…&quot;</td>
+<td>Each programme version needs its own code</td>
+<td>Use a new code, such as <em>{X}_2027</em></td>
+</tr>
+<tr>
+<td>&quot;The hd programme in force already starts on <em>{date}</em>. A new one must start after it.&quot;</td>
+<td>Programmes are added forward in time</td>
+<td>Correct the start date</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="install"><span class="secnum">10</span> After installing or upgrading</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: After installing or upgrading"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/v1/health</code> returns 404, but the domain's root works</td>
+<td><code>mod_rewrite</code> is off or <code>public/.htaccess</code> did not upload</td>
+<td>Upload <code>.htaccess</code>; ask the host to enable <code>mod_rewrite</code></td>
+</tr>
+<tr>
+<td>A 500 on every request</td>
+<td>Usually folder permissions or a wrong database password; the log names which</td>
+<td>Read <code>storage/logs/</code>. Make <code>storage/*</code> and <code>bootstrap/cache</code> writable; check the <code>DB_*</code> values in <code>.env</code> (<a href="deployment-guide.html">DG·1</a>)</td>
+</tr>
+<tr>
+<td>A stack trace appears in the browser</td>
+<td><code>APP_DEBUG=true</code> in production — it exposes the <code>.env</code>, database password included</td>
+<td>Set <code>APP_DEBUG=false</code> now, then change the database password</td>
+</tr>
+<tr>
+<td>Health reports the schema as <code>fail</code></td>
+<td>An import stopped part-way; expect at least 66 tables, and exactly 12 views and 6 triggers</td>
+<td>Re-import the files in order; check phpMyAdmin's error output</td>
+</tr>
+<tr>
+<td>Health shows 0 triggers</td>
+<td>The database user lacked the privilege to create them</td>
+<td>Grant the user ALL PRIVILEGES on its database and re-import <code>01-schema.sql</code> into an empty database</td>
+</tr>
+<tr>
+<td>Health reports migrations <code>fail</code> with some pending</td>
+<td><code>02-post-baseline.sql</code> was not imported</td>
+<td>Import it; it is safe to re-run</td>
+</tr>
+<tr>
+<td>Nobody can sign in at all</td>
+<td><code>personal_access_tokens</code> is missing (from <code>02</code>), or no account exists (<code>04</code>)</td>
+<td>Import <code>02</code>, then the accounts</td>
+</tr>
+<tr>
+<td>The console or tablet loads, but every request fails</td>
+<td>The client is served from a different origin than the API; there is no CORS configuration</td>
+<td>Serve both apps from the API's own domain, in sub-folders</td>
+</tr>
+<tr>
+<td>A page works from its link but 404s when reloaded</td>
+<td>The client folder has no <code>.htaccess</code> sending unknown paths to <code>index.html</code></td>
+<td>Add it (<a href="deployment-guide.html">DG·1</a>)</td>
+</tr>
+<tr>
+<td>The first invoice or claim fails with a fatal error</td>
+<td>The PHP <code>bcmath</code> extension is missing</td>
+<td>Enable it in cPanel's PHP extensions</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="times"><span class="secnum">11</span> Times and dates look wrong</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Times and dates look wrong"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Times on screens are hours off the wall clock</td>
+<td>The unit's timezone in Settings is wrong</td>
+<td>Set it to where the unit is. Stored times do not move; the day they fall on does</td>
+</tr>
+<tr>
+<td>A water check counted for the wrong day, or the board opened on yesterday</td>
+<td>Same cause</td>
+<td>Same action</td>
+</tr>
+<tr>
+<td>The Controls screen lists a water breach under the previous day</td>
+<td>That list dates a breach by the UTC day. A 05:30 reading in Manila is 21:30 UTC the day before</td>
+<td>Display only: the breach is listed either way, and the check that blocks treatment uses the unit's own day</td>
+</tr>
+<tr>
+<td><code>created_at</code> values in the database are hours ahead of UTC</td>
+<td>A few columns are filled by MySQL itself, in the database server's zone, not the application's UTC</td>
+<td>Known; read those columns with care</td>
+</tr>
+<tr>
+<td>The twice-daily check ran at 14:00 and 02:00</td>
+<td>The schedule runs on UTC (<a href="admin-guide.html#jobs">AG·1 §4</a>)</td>
+<td>Open the Controls screen each morning</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="jobs"><span class="secnum">12</span> Reports and scheduled jobs</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Reports and scheduled jobs"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The Controls screen is never at zero after a water breach</td>
+<td>Water exceptions stay on the list for 90 days whether or not they were corrected; it is a record of exceptions, not a to-do list</td>
+<td>Look for new rows, not a zero. A breach with an action written was dealt with</td>
+</tr>
+<tr>
+<td>A cohort row on the Controls screen</td>
+<td>A session today or later sits in a chair or on a machine against the patient's cohort — an override, an import, or a direct edit</td>
+<td>Reseat the patient if it is not deliberate; if it is an override, it stays listed for that day</td>
+</tr>
+<tr>
+<td>A dialyzer row on the Controls screen</td>
+<td>An active unit is below 80% of its volume or at its reuse count</td>
+<td>Condemn it with a reprocessing record through the API; it leaves the list when it is no longer active</td>
+</tr>
+<tr>
+<td><code>dialysis:check-controls</code> fails every run</td>
+<td>It exits non-zero while anything is listed — including 90 days of water exceptions</td>
+<td>Read what it lists; see the first row</td>
+</tr>
+<tr>
+<td>The quality report is empty or stale</td>
+<td>The scheduler is not running, or the host killed the rebuild for exceeding its resource limits</td>
+<td>Check <code>MAX(summarised_at)</code> and the cron entry; on a CloudLinux host check the LVE faults in cPanel; run <code>dialysis:summarise-quality</code> by hand if you have a shell</td>
+</tr>
+<tr>
+<td>Nothing in the log from the scheduled check</td>
+<td>Either nothing was outstanding or the scheduler is not running</td>
+<td>The summariser's timestamp tells the two apart (<a href="admin-guide.html#jobs">AG·1 §4</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="wrong-data"><span class="secnum">13</span> When the data is wrong</h2>
+<aside class="callout callout-stop"><p class="callout-label">Stop, and take a backup</p><p>Before you change anything, take a backup of the database as it is now — wrong data included — and keep it. It is the evidence of what happened, and your way back if the fix makes it worse.</p></aside>
+<p>Then, in this order:</p>
+<ol>
+<li>
+<p><strong>Find out what happened before deciding what is true.</strong> <code>audit_logs</code> shows who changed the record and what it was before; <code>session_notes</code> shows amendments and overrides; <code>sync_batches</code> shows what each tablet sent and what the server answered; <code>record_access_logs</code> shows who had the record open. A wrong number with an audit trail is a correction to make; a wrong number without one was written around the application, and that is a bigger problem.</p>
+</li>
+<li>
+<p><strong>Use the path the system provides</strong>, so the correction carries a reason and an audit record:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: When the data is wrong"><table>
+<thead>
+<tr>
+<th>What is wrong</th>
+<th>The sanctioned path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A value on a signed session</td>
+<td>A nephrologist amends it with a reason (API)</td>
+</tr>
+<tr>
+<td>A value on an ended, unsigned session</td>
+<td>Sign both, then amend</td>
+</tr>
+<tr>
+<td>A dry weight</td>
+<td>Set a new one from the correct date. Sessions already run keep the target they were run against; amend a session only if its snapshot itself was wrong</td>
+</tr>
+<tr>
+<td>Serology, and so the cohort</td>
+<td>Record the correct result (API); the cohort follows the latest result</td>
+</tr>
+<tr>
+<td>A patient's demographics or status</td>
+<td>Records or admin through the API (<code>PATCH</code> or <code>POST …/status</code>)</td>
+</tr>
+<tr>
+<td>A claim still in draft or ready</td>
+<td>Void it and generate a new one</td>
+</tr>
+<tr>
+<td>A claim the payer already has</td>
+<td>No path yet; record what the payer does, and handle the correction outside the system</td>
+</tr>
+<tr>
+<td>An invoice</td>
+<td>Void it with a reason and draft a new one</td>
+</tr>
+<tr>
+<td>A lab result</td>
+<td>No amend path yet (a known gap); a correction is a direct change — see step 3</td>
+</tr>
+<tr>
+<td>Stock</td>
+<td>Receipts and issues go through the API. A write-off or a quarantine exists in the service but has no endpoint yet, so it needs a developer. Never edit a lot's balance directly — the trigger owns it</td>
+</tr>
+</tbody>
+</table></div>
+</li>
+<li>
+<p><strong>If there is no path and the change must be made in SQL</strong>, it will bypass the services and the audit log. So write down beforehand what you will change, why, who authorised it and the old values; change as little as possible; never touch a locked session's clinical columns (the trigger refuses, and <code>@allow_amendment</code> belongs to the amendment path alone); never delete a patient, a session or an audit row; then run <code>dialysis:check-controls</code> and keep your note with the backup.</p>
+</li>
+<li>
+<p><strong>Tell the clinical lead</strong> about anything that changed a clinical record. A corrected number that somebody acted on is a clinical incident, not only a data fix.</p>
+</li>
+</ol>
+<h2 id="worst-case"><span class="secnum">14</span> The worst case</h2>
+<p><strong>The server or the database is gone.</strong> The unit carries on dialysing on paper: every session field can be back-entered later, and the system was designed for a full day on paper. Then:</p>
+<ol>
+<li>Restore the most recent good backup into an empty database — on the same host or a new one (<a href="deployment-guide.html">DG·1</a>).</li>
+<li>Check it: 69 tables, 12 views, 6 triggers; <code>/api/v1/health</code> reports <code>ok</code> for the database and schema.</li>
+<li>Point <code>.env</code> at it. Keep the same <code>APP_KEY</code> if you have it; if it is lost, generate a new one. Nothing is encrypted with it today, so passwords and sign-in tokens carry on working.</li>
+<li>Open the Controls screen and resolve what it lists.</li>
+<li>Reconnect the tablets. Anything still in their outboxes replays and is not duplicated. Anything they had already sent before the loss, but after the backup, is not on the tablets any more — back-enter it from paper.</li>
+<li>Back-enter the paper records from the outage, oldest first.</li>
+</ol>
+<p><strong>Nobody can sign in as an administrator.</strong> Grant the role with SQL: <code>INSERT IGNORE INTO role_staff (staff_id, role_code) SELECT id, 'admin' FROM staff WHERE employee_no = 'ADM-001' AND is_active = 1;</code> — or reset that account's password with <code>make-accounts.php --reset</code>.</p>
+<p><strong>A credentials sheet was left on the server or shared.</strong> Reset every account on it (<code>make-accounts.php --reset</code> with each employee number), import the reset file, and delete every copy of the old sheet. The reset signs those accounts out everywhere.</p>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>TG·1</span> Troubleshooting guide · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>docs/src/troubleshooting.md</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

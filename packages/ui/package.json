@@ -1,0 +1,26 @@
+{
+  "name": "@dialysis/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared UI primitives. Currently the confirmation dialog that replaces window.confirm.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.8",
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.4"
+  }
+}

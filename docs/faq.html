@@ -1,0 +1,943 @@
+<title>Why It Stopped You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Libre+Franklin:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  /* ---- Light palette: the complete set lives here, on bare :root ---------- */
+  :root {
+    --paper:    #F7F8F7;
+    --surface:  #FFFFFF;
+    --ink:      #16221F;
+    --muted:    #5C6B67;
+    --faint:    #7E8C88;
+    --rule:     #DDE3E0;
+    --rule-soft:#EAEEEC;
+    --accent:   #0E6B5E;
+    --accent-w: #E4F0ED;
+
+    /* Semantic, deliberately not the accent: this system's character is what
+       it refuses, so blocked/warning/allowed have to read on their own. */
+    --blocked:   #9C2F26;
+    --blocked-bg:#F7E9E7;
+    --warning:   #9A6410;
+    --warning-bg:#F8EFDE;
+    --ok:        #2F6B3A;
+    --ok-bg:     #E7F0E8;
+
+    --shadow: 0 1px 2px rgba(22, 34, 31, .05), 0 8px 24px -16px rgba(22, 34, 31, .25);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:    #101614;
+      --surface:  #161E1B;
+      --ink:      #E8EDEA;
+      --muted:    #9AAAA4;
+      --faint:    #7C8B86;
+      --rule:     #26312E;
+      --rule-soft:#1E2724;
+      --accent:   #4FB8A5;
+      --accent-w: #14312C;
+
+      --blocked:   #E5938A;
+      --blocked-bg:#2E1B18;
+      --warning:   #D9A64A;
+      --warning-bg:#2B2214;
+      --ok:        #85C591;
+      --ok-bg:     #17281B;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:    #101614;
+    --surface:  #161E1B;
+    --ink:      #E8EDEA;
+    --muted:    #9AAAA4;
+    --faint:    #7C8B86;
+    --rule:     #26312E;
+    --rule-soft:#1E2724;
+    --accent:   #4FB8A5;
+    --accent-w: #14312C;
+
+    --blocked:   #E5938A;
+    --blocked-bg:#2E1B18;
+    --warning:   #D9A64A;
+    --warning-bg:#2B2214;
+    --ok:        #85C591;
+    --ok-bg:     #17281B;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ---- Masthead: ruled like the top of an observation chart -------------- */
+  .masthead {
+    padding: 72px 0 32px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 18px;
+  }
+  h1 {
+    font-family: Newsreader, Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(2.4rem, 6vw, 3.9rem);
+    line-height: 1.04;
+    letter-spacing: -.015em;
+    margin: 0 0 20px;
+    text-wrap: balance;
+  }
+  .standfirst {
+    max-width: 62ch;
+    font-size: 1.13rem;
+    color: var(--muted);
+    margin: 0;
+  }
+  .standfirst strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- Legend ------------------------------------------------------------ */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    padding: 20px 0 0;
+    margin-top: 28px;
+    border-top: 1px solid var(--rule);
+  }
+  .legend p {
+    margin: 0 0 4px;
+    width: 100%;
+    font-size: .86rem;
+    color: var(--faint);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .chip::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+  }
+  .chip.blocked { color: var(--blocked); background: var(--blocked-bg); }
+  .chip.warns   { color: var(--warning); background: var(--warning-bg); }
+  .chip.design  { color: var(--accent);  background: var(--accent-w); }
+  .chip.howto   { color: var(--ok);      background: var(--ok-bg); }
+
+  /* ---- Two-column body --------------------------------------------------- */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 48px;
+    margin-top: 52px;
+  }
+  @media (min-width: 900px) {
+    .layout { grid-template-columns: 216px 1fr; gap: 64px; align-items: start; }
+    nav.rail { position: sticky; top: 32px; }
+  }
+
+  nav.rail h2 {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 500;
+    margin: 0 0 14px;
+  }
+  nav.rail ol {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  nav.rail a {
+    display: block;
+    padding: 7px 10px 7px 12px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .93rem;
+    border-left: 2px solid var(--rule);
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  nav.rail a:hover, nav.rail a:focus-visible {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--rule-soft);
+  }
+
+  main { min-width: 0; }
+
+  section.group { margin-bottom: 60px; scroll-margin-top: 28px; }
+  section.group > h2 {
+    font-family: Newsreader, Georgia, serif;
+    font-weight: 600;
+    font-size: 1.62rem;
+    letter-spacing: -.01em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  section.group > .grouplede {
+    margin: 0 0 26px;
+    color: var(--muted);
+    max-width: 66ch;
+    font-size: .97rem;
+  }
+
+  /* ---- A question: a ruled row, like a flow-sheet entry ------------------ */
+  .qa {
+    border-top: 1px solid var(--rule);
+    padding: 24px 0 26px;
+  }
+  .qa:last-child { border-bottom: 1px solid var(--rule); }
+
+  .qhead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .qa h3 {
+    font-family: "Libre Franklin", sans-serif;
+    font-weight: 600;
+    font-size: 1.06rem;
+    line-height: 1.4;
+    margin: 0;
+    flex: 1 1 340px;
+    text-wrap: balance;
+  }
+  .qa p { margin: 0 0 12px; max-width: 68ch; color: var(--muted); }
+  .qa p:last-child { margin-bottom: 0; }
+  .qa strong { color: var(--ink); font-weight: 600; }
+
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .86em;
+    background: var(--rule-soft);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  /* The fix line: what to actually do about it. */
+  .fix {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: start;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    box-shadow: var(--shadow);
+  }
+  .fix .lbl {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-top: 3px;
+    white-space: nowrap;
+  }
+  .fix p { margin: 0; color: var(--ink); font-size: .95rem; max-width: none; }
+
+  .note {
+    margin-top: 40px;
+    padding: 22px 24px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+  }
+  .note h2 {
+    font-family: Newsreader, Georgia, serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  .note p { margin: 0 0 10px; color: var(--muted); max-width: 70ch; font-size: .95rem; }
+  .note p:last-child { margin-bottom: 0; }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 22px;
+    border-top: 2px solid var(--ink);
+    font-size: .87rem;
+    color: var(--faint);
+  }
+  footer p { margin: 0 0 6px; max-width: 72ch; }
+
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Dialysis Centre System · Ward reference</p>
+    <h1>Why it stopped you</h1>
+    <p class="standfirst">
+      This system refuses things. That is deliberate — most of its rules exist because
+      the alternative harms someone. <strong>Every refusal here has a reason and a way
+      forward.</strong> Find what you saw on screen, and it will tell you both.
+    </p>
+
+    <div class="legend">
+      <p>Each answer is tagged with what the system actually did:</p>
+      <span class="chip blocked">Blocked</span>
+      <span class="chip warns">Warned</span>
+      <span class="chip design">By design</span>
+      <span class="chip howto">How to</span>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <nav class="rail" aria-label="Sections">
+      <h2>Sections</h2>
+      <ol>
+        <li><a href="#starting">Starting a treatment</a></li>
+        <li><a href="#infection">Chairs and machines</a></li>
+        <li><a href="#charting">Charting</a></li>
+        <li><a href="#signing">Signing and changing</a></li>
+        <li><a href="#billing">Billing</a></li>
+        <li><a href="#offline">Offline and tablets</a></li>
+        <li><a href="#records">Patient records</a></li>
+      </ol>
+    </nav>
+
+    <main>
+
+      <!-- ============================================================ -->
+      <section class="group" id="starting">
+        <h2>Starting a treatment</h2>
+        <p class="grouplede">
+          Most first-thing-in-the-morning refusals come from one of two checks: the
+          water, and the machine.
+        </p>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“No water check has been logged for today.” I can’t start anyone.</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            The first treatment of the day cannot begin until someone has measured total
+            chlorine and recorded it. Chlorine and chloramine pass straight through an RO
+            membrane; when the carbon beds are exhausted they reach the dialysate, and
+            across a dialyzer membrane that haemolyses the patient.
+          </p>
+          <p>
+            <strong>No reading is not a pass.</strong> An unmeasured carbon bed is not a
+            safe one, so silence fails closed rather than open.
+          </p>
+          <div class="fix">
+            <span class="lbl">Do this</span>
+            <p>Have the technician run the test strip and record the result. Once a passing
+            check is on file, the day opens — and the check is not asked for again before
+            every patient, only before the first.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Total chlorine is 0.15 ppm, above the 0.1 ppm action limit.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            The water is out of specification. 0.1 ppm total chlorine is the AAMI/ISO 23500
+            action level, and it is the figure written into this system’s schema. Above it,
+            nobody dialyses.
+          </p>
+          <div class="fix">
+            <span class="lbl">Do this</span>
+            <p>Correct the carbon beds, then log a fresh check. The day opens on the new
+            passing reading, not by overriding the old one — there is no override for this.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Machine M-0042 is under_repair and cannot be used.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            A machine marked <code>under_repair</code>, <code>quarantined</code> or
+            <code>retired</code> is unavailable regardless of what the board says. If it
+            failed a safety test, the system took it out of service at the moment the
+            failure was recorded.
+          </p>
+          <div class="fix">
+            <span class="lbl">Do this</span>
+            <p>Use another machine. To bring this one back, biomed records the corrective
+            maintenance and returns it to service.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Record the pre-dialysis weight before starting.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            The UF goal is calculated from the pre-dialysis weight against the dry weight.
+            Starting without it produces a fluid-removal target derived from nothing.
+          </p>
+          <div class="fix">
+            <span class="lbl">Do this</span>
+            <p>Weigh the patient and complete check-in, then start.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“A session that is scheduled cannot become in_progress.”</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            The treatment runs in order: <strong>scheduled → checked in → in progress →
+            completed</strong>. You have tried to skip check-in. The columns only make
+            sense in sequence — an end time on a session that never started produces a
+            duration that is quietly wrong rather than obviously missing.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <section class="group" id="infection">
+        <h2>Chairs and machines</h2>
+        <p class="grouplede">
+          Infection-control segregation is the highest-consequence rule in the unit. It is
+          the only rule in the system that both refuses <em>and</em> yields to a reason.
+        </p>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Station S-01 is not designated for the HBV cohort.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            The patient’s infection-control cohort — <code>clean</code>, <code>hbv</code> or
+            <code>hcv</code> — is not set by hand. It is derived from their most recent
+            result for each serology marker, so filing one HBsAg result can move a patient
+            between cohorts and change which chairs they may use, including for bookings
+            already on tomorrow’s board.
+          </p>
+          <div class="fix">
+            <span class="lbl">Do this</span>
+            <p>Move the patient to a chair their cohort permits. If none is available and
+            the treatment cannot wait, see the override below.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“That machine last treated a HBV patient and has had no disinfection cycle since.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            A machine carries the previous patient’s blood path until a cycle is recorded.
+            This is a categorical rule, not an interval one — <em>how often</em> a machine
+            must otherwise be cleaned is your unit’s policy and the system does not assert
+            a number, but that it must be cleaned <em>between cohorts</em> is not
+            negotiable.
+          </p>
+          <div class="fix">
+            <span class="lbl">Do this</span>
+            <p>Run the disinfection cycle and record it. The machine clears immediately.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>Our only HBV chair is broken and the patient needs dialysing today.</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Infection-control segregation accepts an override, because a rule with no
+            override gets worked around outside the system — where nothing records it at
+            all. Supply a reason of at least ten characters and the assignment proceeds.
+          </p>
+          <p>
+            The override is written onto the chart as an
+            <strong>INFECTION CONTROL OVERRIDE</strong> note where a reviewing clinician
+            will see it, it lands in the audit trail, and the response says plainly what
+            was overridden so no screen can succeed quietly.
+          </p>
+          <div class="fix">
+            <span class="lbl">Note</span>
+            <p>“ok” will be rejected. Write a reason that still means something to whoever
+            reads this record in a year.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Machine M-0042 has run 3 treatments since it was last disinfected.”</h3>
+            <span class="chip warns">Warned</span>
+          </div>
+          <p>
+            This one does <strong>not</strong> stop you. It is a statement of fact from the
+            data, not a verdict: the system does not know your cleaning interval and will
+            not invent one. In a unit that disinfects between every patient, any number
+            above zero is worth acting on.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Dialyzer DZ-0041 is at 74.5% of its original total cell volume.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            Below 80% of new, the fibre bundle has clotted off far enough that clearance is
+            no longer what was prescribed — the patient would be dialysed less than the
+            chart claims. The unit is refused at the point of issue and condemned at its
+            next reprocessing.
+          </p>
+          <p>
+            The same check refuses a dialyzer that has reached its reuse count, and one that
+            <strong>belongs to a different patient</strong> — that last one is a
+            cross-infection event, not a paperwork slip.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <section class="group" id="charting">
+        <h2>Charting</h2>
+        <p class="grouplede">
+          The flow sheet is append-only. Nothing you write is edited in place, which is
+          what makes it safe to chart from two devices at once.
+        </p>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“An observation for this session at that time is already recorded.”</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Vitals are keyed by session and the exact time recorded. A second reading at the
+            same instant is a duplicate, not a new observation — which is precisely what
+            makes the flow sheet conflict-free between a tablet that has been offline and a
+            desk that has not. Two devices charting the same session cannot produce a merge
+            conflict, only a duplicate the system absorbs.
+          </p>
+          <div class="fix">
+            <span class="lbl">Do this</span>
+            <p>If the first reading was wrong, add a corrected one at the actual time it was
+            taken. Nothing is overwritten and both stay on the record.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Heparin is a high-alert medication and requires a witness.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            High-alert drugs need an independent second check. The system names the drug
+            rather than handing you a constraint error, so you know which one it means.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“The nurse giving it cannot witness their own dose.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            A witness who is the same person is not a second check, which is the entire
+            point of the rule. The database only requires the field to be filled; the
+            system is deliberately stricter than that.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“hypotensionn” was rejected as an event code.</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            Event codes come from a fixed list. A typo would otherwise create a category
+            that no report ever counts, so the unrecognised code is refused rather than
+            quietly stored.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>I entered a Kt/V of 1.9 and it saved 1.32.</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Kt/V and URR are <strong>derived</strong>, and the server derives them from the
+            BUN samples rather than storing what it was sent. A chart holding a Kt/V that
+            disagrees with its own blood results is a chart that will be believed and is
+            wrong — and Kt/V is what decides whether a prescription gets lengthened.
+          </p>
+          <p>
+            One exception: a Kt/V from the machine’s own online-clearance or ionic sensor is
+            a <em>measurement</em>, not a derivation, and is kept exactly as recorded.
+            Recomputing over it would replace a real reading with an estimate.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <section class="group" id="signing">
+        <h2>Signing and changing</h2>
+        <p class="grouplede">
+          A treatment record locks when both signatures are in. After that there is one way
+          in, and it leaves a trail.
+        </p>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Cannot sign, missing: post_weight_kg, ended_at.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            A record cannot be signed with its clinically mandatory fields empty: pre and
+            post weight, start and end times, and a named primary nurse. Signing attests
+            that the treatment happened as recorded, and an incomplete record cannot be
+            attested to.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Session was signed and locked. Corrections go through the amendment path.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            Both signatures are in and the record is closed. This is not a permissions
+            problem — you have the right role, the record has simply moved on. If your
+            tablet was offline when it locked, your observation was not discarded: it was
+            reported back to you as a conflict.
+          </p>
+          <div class="fix">
+            <span class="lbl">Do this</span>
+            <p>A nephrologist amends the record with a reason. The original values stay put;
+            the correction becomes a session note and a full before/after pair in the audit
+            log. The record stays locked.</p>
+          </div>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>Why do two people have to sign?</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            The nurse attests to what was delivered; the nephrologist countersigns it. Neither
+            signature alone locks the record, and a nurse cannot countersign as the
+            nephrologist. Once both are in, the treatment record becomes the legal account of
+            what happened.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>Why does the amendment ask me to write a reason?</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            An amendment without a reason is indistinguishable from someone quietly fixing
+            a number. The reason becomes part of the chart, so write one that will still
+            make sense to a reader in a year.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <section class="group" id="billing">
+        <h2>Billing</h2>
+        <p class="grouplede">
+          A claim is what the payer is asked for; an invoice is what is left. Neither rate
+          nor cap is written into the software.
+        </p>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Session … is already on claim CLM-202608-0003.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            A session is billed at most once, and the system tells you which claim already
+            has it rather than just refusing. If the whole batch is rejected for one
+            duplicate, that is intentional — a claim covering four of six sessions is worse
+            than none, because someone then has to work out which two are missing.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Session … is not signed. Only a locked record may be claimed.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            An unsigned record is work nobody has attested to yet. Billing it puts a claim
+            in front of a payer for a treatment the unit has not finished certifying.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“Only 1 of the 156 allotted remain in the period ending 2026-12-31.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            The annual allotment is nearly spent. Note that <strong>156 is not written into
+            the software</strong> — it is read from the benefit programme in force on the
+            service date. The PhilHealth case rate has moved ₱2,600 → ₱4,000 → ₱6,350 and
+            the allotment 90 → 156; superseded programmes stay on file so a historical claim
+            re-prices against what was in force at the time.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>The invoice says the patient owes nothing. Is that right?</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            If the benefit programme forbids balance billing, it is right. Charging the
+            patient the difference is exactly what that rule prohibits, so the system sets
+            their share to zero whatever the list price came to.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“A claim approved at zero is a denial, and a denial needs a code.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            A denial with no code is a claim nobody can resubmit. Record what the payer’s
+            advice actually said — the claim’s status then follows the money rather than
+            being asserted alongside it, so a claim cannot read “paid” while its remittance
+            says otherwise.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <section class="group" id="offline">
+        <h2>Offline and tablets</h2>
+        <p class="grouplede">
+          The bedside tablet is built to lose the network and keep working. This is the part
+          of the system the unit depends on most.
+        </p>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>The tablet had no signal all shift. Did I lose my charting?</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            No. Everything you chart is written to a local outbox first and sent when the
+            network returns. The outbox is the authoritative record on the device — the
+            cached patient list is only a read-only copy.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>My session expired while I was offline. Will it drop my queue?</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            No. An expired token is never treated as “these operations failed”. The queue is
+            kept, you re-authenticate with your PIN, and the same batch replays.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>The tablet resent everything. Did it double up my readings?</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            No. Every operation carries an identifier minted on the device, and a replayed
+            batch returns the stored answer without touching a single clinical row. If one
+            row in a batch is malformed, only that row is rejected — a nurse never loses
+            four hours of charting to one bad payload.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>Why a 6-digit PIN instead of my password?</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Nurses re-authenticate roughly twenty times a shift. Demanding a full password
+            that often guarantees one shared logged-in account, which destroys the audit
+            trail — so the PIN is a deliberate trade. It is fenced in: the tablet must
+            already have completed a full password login for you, the route is rate-limited,
+            and every attempt is recorded.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>I got signed out on a different tablet and my session was killed.</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Each login is bound to the device it was issued on. A credential presented from
+            a second tablet has been copied, so it is <strong>revoked rather than
+            refused</strong> — refusing it would leave a working credential in the wrong
+            hands. Log in again on the device you are actually holding.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <section class="group" id="records">
+        <h2>Patient records</h2>
+        <p class="grouplede">
+          Nothing clinical is ever really deleted, and the things that change over time are
+          kept as history rather than overwritten.
+        </p>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>“The birth date cannot be in the future.”</h3>
+            <span class="chip blocked">Blocked</span>
+          </div>
+          <p>
+            Usually a typo in the year. Worth knowing: the database itself cannot enforce
+            this one, so if it were not checked at entry it would not be checked anywhere.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>I changed the status on the patient form and it did not save.</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Status changes have their own step, so a history entry can never be skipped.
+            “When did this patient transfer out?” is a question the chart has to answer
+            years later, and the status field alone cannot answer it.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>I set a new dry weight and last month’s IDWG figures did not move.</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Correct. A dry weight is effective-dated, not a field you overwrite, and each
+            session records the target that was in force on the day it ran. If the new
+            weight rewrote history, every past session’s fluid numbers would silently change
+            meaning.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>I deleted a patient but they are still in the database.</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Deletion is a soft delete and only an administrator can do it. Sessions, claims
+            and the audit trail all reference the patient; a chart that vanishes cannot be
+            audited.
+          </p>
+        </div>
+
+        <div class="qa">
+          <div class="qhead">
+            <h3>Does the system record that I opened a chart?</h3>
+            <span class="chip design">By design</span>
+          </div>
+          <p>
+            Yes. Every chart view is logged — who opened whose record, and when. That is a
+            different question from who changed what, and it is the one privacy regulators
+            actually ask. Opening a treatment record counts as opening that patient’s chart.
+          </p>
+        </div>
+      </section>
+
+      <div class="note">
+        <h2>Still stuck?</h2>
+        <p>
+          Two rules of thumb. If the message names a <strong>chair, machine, dialyzer or the
+          water</strong>, it is an infection-control or equipment rule and the fix is
+          physical — move, clean, or replace. If it names a <strong>signature, a reason or a
+          claim</strong>, it is a record-keeping rule and the fix is a step you have not
+          taken yet.
+        </p>
+        <p>
+          If a refusal looks wrong to you, it is worth reporting rather than working around.
+          The rules in this system were each put there because the alternative harmed
+          someone — but a rule firing in a situation nobody anticipated is still a bug.
+        </p>
+      </div>
+
+      <footer>
+        <p>
+          <strong>A note on this document.</strong> The screens described here are not built
+          yet — the bedside and console applications are scaffolds. What is complete and
+          tested is the system underneath: the rules, the refusals and the records. Any
+          interface built on it will enforce exactly what is written above.
+        </p>
+        <p>
+          Clinical thresholds cited: total chlorine 0.1 ppm (AAMI/ISO 23500), Kt/V ≥ 1.2 and
+          URR ≥ 65% (KDOQI 2015), dialyzer TCV floor 80% of new. Verify each against your
+          unit’s own standard operating procedures before go-live.
+        </p>
+      </footer>
+
+    </main>
+  </div>
+</div>

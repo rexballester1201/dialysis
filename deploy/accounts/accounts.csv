@@ -1,0 +1,40 @@
+# Staff accounts. One row per PERSON, never one per role: the name here is the
+# name printed on every record the account signs, and the high-alert witness
+# check only means something if two sign-ins are two people.
+#
+# The seven rows below are a starter set -- one per role the system checks -- so
+# a new installation has someone who can do each job on day one. Replace each
+# placeholder name with the real person before generating, if you can:
+#
+#     php deploy/accounts/make-accounts.php            (writes sql/04-accounts.sql)
+#
+# To add someone later, append a row and generate only that row:
+#
+#     php deploy/accounts/make-accounts.php RN-002
+#
+# Columns
+#   employee_no  the sign-in name. Unique. Letters, digits, . - _
+#   email        optional; also accepted as a sign-in name
+#   roles        one or more, separated by |  (e.g. nurse|head_nurse)
+#   licence_no   PRC licence, optional; worth filling for nephrologists and nurses
+#
+# Roles, and what each is for (admin can also do most of the others)
+#   admin         open Settings, grant roles
+#   records       register patients, correct demographics ("encoder")
+#   billing       claims, remittances, invoices, payments
+#   technician    water tests, dialyzer reprocessing
+#   head_nurse    everything a nurse can, plus registering patients and ordering labs
+#   nurse         chart at the chair, sign as the delivering nurse
+#   nephrologist  countersign and amend treatment records, prescribe, order labs
+#   (dietitian and readonly exist but no screen checks them yet)
+#
+# A PIN for the bedside tablet is generated automatically for nurse,
+# head_nurse and nephrologist.
+employee_no,first_name,last_name,email,roles,licence_no
+ADM-001,Site,Administrator,,admin,
+ENC-001,Records,Encoder,,records,
+BIL-001,Billing,Officer,,billing,
+TEC-001,Renal,Technician,,technician,
+HN-001,Head,Nurse,,head_nurse,
+RN-001,Dialysis,Nurse,,nurse,
+NEP-001,Attending,Nephrologist,,nephrologist,

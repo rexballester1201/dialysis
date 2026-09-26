@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dialysis Deployment Runbook</title>
+<meta name="description" content="Step-by-step deployment of the dialysis centre system to cPanel shared hosting with no shell.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  /* Tokens mirror the console's clinical palette, so the runbook reads as part of the system. */
+  :root {
+    --paper: #f4f6f5;
+    --surface: #ffffff;
+    --surface-2: #eaefed;
+    --ink: #16221f;
+    --muted: #56655f;
+    --faint: #7e8c88;
+    --rule: #d7dfdc;
+    --accent: #0e6b5e;
+    --accent-ink: #ffffff;
+    --accent-wash: #e4f0ed;
+    --alarm: #9c2f26;
+    --alarm-wash: #f7e9e7;
+    --warn: #8a5a0e;
+    --warn-wash: #f8efde;
+    --ok: #2f6b3a;
+    --code-bg: #eef2f0;
+    --shadow: 0 1px 2px rgba(22, 34, 31, 0.06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f1513;
+      --surface: #161f1c;
+      --surface-2: #1d2824;
+      --ink: #e3ebe8;
+      --muted: #a2b2ac;
+      --faint: #7f918a;
+      --rule: #2a3833;
+      --accent: #56b8a7;
+      --accent-ink: #0b1311;
+      --accent-wash: #16302b;
+      --alarm: #eb8a80;
+      --alarm-wash: #33201e;
+      --warn: #e2b056;
+      --warn-wash: #302613;
+      --ok: #7cc58a;
+      --code-bg: #111a17;
+      --shadow: none;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1513;
+    --surface: #161f1c;
+    --surface-2: #1d2824;
+    --ink: #e3ebe8;
+    --muted: #a2b2ac;
+    --faint: #7f918a;
+    --rule: #2a3833;
+    --accent: #56b8a7;
+    --accent-ink: #0b1311;
+    --accent-wash: #16302b;
+    --alarm: #eb8a80;
+    --alarm-wash: #33201e;
+    --warn: #e2b056;
+    --warn-wash: #302613;
+    --ok: #7cc58a;
+    --code-bg: #111a17;
+    --shadow: none;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 16px/1.6 "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre, .mono { font-family: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .page { max-width: 860px; margin: 0 auto; padding: 40px 16px 72px; }
+
+  /* ---- masthead ---- */
+  .masthead { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-bottom: 26px; }
+  .eyebrow {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  h1 { margin: 0; font-size: clamp(1.9rem, 4.6vw, 2.6rem); line-height: 1.12; letter-spacing: -0.02em; text-wrap: balance; }
+  .lede { margin: 0; max-width: 64ch; color: var(--muted); font-size: 1.05rem; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+  .facts li {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  .facts strong { color: var(--ink); }
+
+  /* ---- progress ---- */
+  .progress {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    margin-bottom: 18px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+  .bar { flex: 1; height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.25s ease; }
+  .progress-text { font-size: 0.88rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .theme-toggle {
+    font: inherit;
+    font-size: 0.82rem;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 3px 10px;
+    cursor: pointer;
+  }
+
+  /* ---- callouts ---- */
+  .callout { border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 6px; }
+  .callout.stop { background: var(--alarm-wash); color: var(--alarm); }
+  .callout.caution { background: var(--warn-wash); color: var(--warn); }
+  .callout.note { background: var(--accent-wash); color: var(--ink); }
+  .callout strong { font-weight: 700; }
+
+  /* ---- steps ---- */
+  /* minmax(0, 1fr) and min-width: 0: a grid item's automatic minimum is its widest
+     unbreakable line, so a long command in a <pre> would hold every card at desktop
+     width on a phone instead of letting the <pre> scroll. */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .step {
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px 20px;
+  }
+  .step.is-done { opacity: 0.72; }
+  .step-head { display: flex; align-items: flex-start; gap: 14px; }
+  .num {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--accent-wash);
+    color: var(--accent);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .step.is-done .num { background: var(--accent); color: var(--accent-ink); }
+  .step h2 { margin: 5px 0 0; font-size: 1.2rem; line-height: 1.3; flex: 1; text-wrap: balance; }
+  .done {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .done input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .step-body { margin-left: 52px; min-width: 0; }
+  .step-body > p, .step-body > ul, .step-body > ol { margin: 10px 0 0; max-width: 68ch; }
+  .step-body li + li { margin-top: 4px; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .why::before { content: "Why: "; font-weight: 700; color: var(--ink); }
+
+  code {
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.88em;
+    overflow-wrap: anywhere;
+  }
+  .codeblock { position: relative; margin: 12px 0 0; }
+  pre {
+    margin: 0;
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font: inherit;
+    font-size: 0.75rem;
+    padding: 3px 9px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .copy:hover { color: var(--ink); }
+
+  /* ---- tables ---- */
+  .tablewrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--rule); border-radius: 8px; }
+  /* On a phone the table scrolls inside its box rather than crushing columns until
+     sign-in names and role codes break mid-word. */
+  table { width: 100%; min-width: 640px; border-collapse: collapse; font-variant-numeric: tabular-nums; background: var(--surface); }
+  td.mono, td code { white-space: nowrap; overflow-wrap: normal; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+  tr:last-child td { border-bottom: none; }
+
+  /* ---- sections after the steps ---- */
+  .section { margin-top: 34px; }
+  .section > h2 { font-size: 1.35rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .section > p { margin: 0 0 8px; max-width: 68ch; color: var(--muted); }
+  .checklist { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .checklist label {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .checklist input { flex: none; width: 18px; height: 18px; margin-top: 3px; accent-color: var(--accent); }
+  .checklist input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
+  details {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 10px;
+  }
+  summary { cursor: pointer; font-weight: 700; }
+  details ul { margin: 10px 0 2px; padding-left: 20px; }
+  details li + li { margin-top: 6px; }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.9rem; }
+
+  @media (max-width: 560px) {
+    .page { padding-top: 28px; }
+    .step { padding: 16px 14px 18px; }
+    .step-head { flex-wrap: wrap; }
+    /* The title takes the row; the tick drops beneath it instead of squeezing it. */
+    .step h2 { flex-basis: calc(100% - 52px); }
+    .step-body { margin-left: 0; }
+    .done { order: 3; margin: 2px 0 0 52px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bar span { transition: none; }
+  }
+  @media print {
+    :root { color-scheme: light; }
+    html, body { background: #fff; }
+    .progress, .copy, .done, .theme-toggle { display: none !important; }
+    .step, .checklist label, details, .tablewrap, pre { box-shadow: none; border-color: #bbb; break-inside: avoid; }
+    details { display: block; }
+    details > summary { list-style: none; }
+    .step.is-done { opacity: 1; }
+    a { color: inherit; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Dialysis Centre Management System</p>
+    <h1>Deploying to cPanel, with no shell</h1>
+    <p class="lede">For one haemodialysis unit on shared hosting, where the only tools are cPanel,
+      File Manager and phpMyAdmin. Work top to bottom — step 0 can end the deployment, so do it first.
+      The full reasoning behind every step is in <code>deploy/DEPLOYMENT.md</code>.</p>
+    <ul class="facts">
+      <li><strong>You need:</strong> cPanel with MySQL 8.0.16+, PHP 8.2+</li>
+      <li><strong>On your own computer:</strong> PHP 8.1+ and Node, for steps 8 and 10</li>
+      <li><strong>This page holds no passwords</strong></li>
+    </ul>
+  </header>
+
+  <div class="progress" aria-live="polite">
+    <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+    <span class="progress-text" id="progress-text">0 of 13 steps done</span>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between light and dark">Theme</button>
+  </div>
+
+  <ol class="steps">
+
+    <li class="step" id="step-0">
+      <div class="step-head">
+        <span class="num">0</span>
+        <h2>Confirm the database server is MySQL, not MariaDB</h2>
+        <label class="done"><input type="checkbox" data-step="0"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>Open <strong>phpMyAdmin</strong> and run:</p>
+        <div class="codeblock"><pre><code>SELECT VERSION();</code></pre></div>
+        <ul>
+          <li><strong>MySQL 8.0.16 or newer</strong> — continue. A suffix such as <code>8.4.9-cll-lve</code> is CloudLinux's MySQL and is fine.</li>
+          <li><strong>Older MySQL</strong> — stop and ask the host to move you to a newer server. Before 8.0.16, MySQL silently ignores CHECK constraints.</li>
+        </ul>
+        <div class="callout stop">
+          <p><strong>Anything saying MariaDB is a full stop.</strong> The quality view uses <code>LEFT JOIN LATERAL</code>, which
+          MariaDB has never supported, so the schema will not import. Rewriting it is a project, not a deployment step —
+          ask the host for MySQL first.</p>
+        </div>
+      </div>
+    </li>
+
+    <li class="step" id="step-1">
+      <div class="step-head">
+        <span class="num">1</span>
+        <h2>Create the database and its user</h2>
+        <label class="done"><input type="checkbox" data-step="1"> Done</label>
+      </div>
+      <div class="step-body">
+        <ol>
+          <li>cPanel → <strong>MySQL Databases</strong> → create a database, e.g. <code>dialysis</code> (it becomes <code>cpuser_dialysis</code>).</li>
+          <li>Create a user with a long random password.</li>
+          <li>Add the user to the database with <strong>ALL PRIVILEGES</strong>.</li>
+        </ol>
+        <p class="why">The import creates triggers and views. A user without those privileges imports the tables and silently
+          skips the six triggers — the database-level safety backstops — while everything appears to work.</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-2">
+      <div class="step-head">
+        <span class="num">2</span>
+        <h2>Upload the application</h2>
+        <label class="done"><input type="checkbox" data-step="2"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>Upload the contents of <code>apps/api/</code> to a folder <strong>outside</strong> the public web root, for example
+          <code>/home/cpuser/dialysis-api/</code>. Include <code>vendor/</code> (about 135 MB): upload it as one .zip and extract
+          it in File Manager.</p>
+        <p>Do <strong>not</strong> upload <code>tests/</code>, <code>verify/</code>, your local <code>.env</code>,
+          <code>storage/framework/testing/</code>, or anything from <code>deploy/</code>.</p>
+        <p><strong>Point the domain at <code>public/</code>.</strong> Preferred: cPanel → <strong>Domains</strong> → set the
+          document root to <code>/home/cpuser/dialysis-api/public</code>. If your plan cannot, copy <code>public/</code> into
+          <code>public_html/</code> and change the two paths in its <code>index.php</code>:</p>
+        <div class="codeblock"><pre><code>require __DIR__.'/../dialysis-api/vendor/autoload.php';
+$app = require_once __DIR__.'/../dialysis-api/bootstrap/app.php';</code></pre></div>
+        <p class="why">Keep <code>public/.htaccess</code> — without it every URL except <code>/</code> returns 404.</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-3">
+      <div class="step-head">
+        <span class="num">3</span>
+        <h2>Make the storage folders writable</h2>
+        <label class="done"><input type="checkbox" data-step="3"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>In File Manager, set these to <strong>0755</strong> (some hosts need 0775):</p>
+        <div class="codeblock"><pre><code>storage/framework/sessions
+storage/framework/cache
+storage/framework/views
+storage/logs
+bootstrap/cache</code></pre></div>
+        <p class="why">Sessions, cache and compiled views all live on disk; the application cannot boot without them.</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-4">
+      <div class="step-head">
+        <span class="num">4</span>
+        <h2>Import the database</h2>
+        <label class="done"><input type="checkbox" data-step="4"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>phpMyAdmin → select your database → <strong>Import</strong>. Import these from <code>deploy/sql/</code>,
+          <strong>in this order</strong>, waiting for each to finish:</p>
+        <ol>
+          <li><code>01-schema.sql</code> — the schema: tables, views, triggers, constraints</li>
+          <li><code>02-post-baseline.sql</code> — the sign-in token table and the later schema fixes</li>
+          <li><code>03-seed.sql</code> — reference data: roles, shifts, chairs, drugs, the facility, one water system</li>
+        </ol>
+        <p>Then confirm it in the <strong>SQL</strong> tab:</p>
+        <div class="codeblock"><pre><code>SELECT
+  (SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE') AS tables_,
+  (SELECT COUNT(*) FROM information_schema.views
+     WHERE table_schema = DATABASE())                               AS views_,
+  (SELECT COUNT(*) FROM information_schema.triggers
+     WHERE trigger_schema = DATABASE())                             AS triggers_;</code></pre></div>
+        <p>Expect <strong>69 tables, 12 views, 6 triggers</strong>. Zero triggers means the user lacked privileges (step 1).</p>
+        <div class="callout note">
+          <p><code>02</code>, <code>03</code> and <code>04</code> are safe to import again — each adds only what is missing.
+          Re-importing <code>01</code> stops at its first statement and changes nothing.</p>
+        </div>
+      </div>
+    </li>
+
+    <li class="step" id="step-5">
+      <div class="step-head">
+        <span class="num">5</span>
+        <h2>Configure <code>.env</code></h2>
+        <label class="done"><input type="checkbox" data-step="5"> Done</label>
+      </div>
+      <div class="step-body">
+        <ol>
+          <li>Copy <code>deploy/.env.production.example</code> to the application folder as <code>.env</code>.</li>
+          <li>Fill in <code>DB_DATABASE</code>, <code>DB_USERNAME</code> and <code>DB_PASSWORD</code> — both names carry the cPanel prefix.</li>
+          <li>Set <code>APP_URL</code> to your real <code>https://</code> address.</li>
+          <li>Generate <code>APP_KEY</code>: edit <code>deploy/generate-key.php</code> and set <code>SECRET</code> to a random
+            string of 20+ characters, upload it beside <code>index.php</code>, visit
+            <code>https://your-domain/generate-key.php?key=YOUR-SECRET</code>, paste the value (with <code>base64:</code>)
+            into <code>APP_KEY</code> — then <strong>delete generate-key.php</strong>.</li>
+        </ol>
+        <div class="callout caution">
+          <p><strong>Leave <code>APP_DEBUG=false</code>.</strong> With it on, any error page shows the configuration —
+          database password included — to whoever triggered it.</p>
+        </div>
+      </div>
+    </li>
+
+    <li class="step" id="step-6">
+      <div class="step-head">
+        <span class="num">6</span>
+        <h2>Run the pre-flight check</h2>
+        <label class="done"><input type="checkbox" data-step="6"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>Edit <code>deploy/preflight.php</code>, set <code>SECRET</code> to a random string of 20+ characters, upload it beside
+          <code>index.php</code>, and visit <code>https://your-domain/preflight.php?key=YOUR-SECRET</code>.</p>
+        <ul>
+          <li>Resolve every <strong>FAIL</strong>. The two about administrators and sign-in fail until step 8.</li>
+          <li>If <code>bcmath</code> is missing, enable it in cPanel → <strong>Select PHP Version</strong> → Extensions.
+            It runs every money calculation.</li>
+          <li><strong>Read the <em>Unit timezone</em> line against the wall clock.</strong> The unit's day is counted in that
+            zone: which day a water check clears, the date the board opens on, when stock expires.</li>
+        </ul>
+        <p>Delete <code>preflight.php</code> when you are done with it (after step 8's re-run).</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-7">
+      <div class="step-head">
+        <span class="num">7</span>
+        <h2>Check the application answers</h2>
+        <label class="done"><input type="checkbox" data-step="7"> Done</label>
+      </div>
+      <div class="step-body">
+        <div class="codeblock"><pre><code>https://your-domain/api/v1/health</code></pre></div>
+        <p>Expect JSON with <code>database: ok</code> and the table counts. <code>redis: not_configured</code> is correct —
+          Redis is not used.</p>
+        <p class="why">A 404 here while <code>/</code> works means <code>mod_rewrite</code> or <code>public/.htaccess</code>
+          is missing. A 500 means: read <code>storage/logs/laravel.log</code> in File Manager.</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-8">
+      <div class="step-head">
+        <span class="num">8</span>
+        <h2>Create the staff accounts</h2>
+        <label class="done"><input type="checkbox" data-step="8"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>There is no screen that creates staff or sets passwords, so accounts go in as SQL, written on
+          <strong>your own computer</strong> by <code>deploy/accounts/make-accounts.php</code>.</p>
+        <ol>
+          <li><strong>Put real names on the accounts.</strong> Open <code>deploy/accounts/accounts.csv</code> and replace each
+            placeholder with the person who will hold it (PRC licence numbers where they apply). One account per person:
+            the name on it is the name on every record it signs. Then generate the SQL and the credentials sheets:
+            <div class="codeblock"><pre><code>php deploy/accounts/make-accounts.php</code></pre></div>
+            To regenerate, add <code>--force</code> — only while nothing has been imported anywhere, because it prints new passwords.</li>
+          <li><strong>Import</strong> <code>deploy/sql/04-accounts.sql</code> in phpMyAdmin, like step 4.</li>
+          <li><strong>Hand out the sign-in details.</strong> Print <code>deploy/accounts/CREDENTIALS.html</code> — one slip per
+            person — give each person only theirs, then delete it and <code>CREDENTIALS.txt</code>.</li>
+          <li>Re-run the pre-flight: <em>Administrator exists</em> and <em>Staff who can sign in</em> now pass.</li>
+        </ol>
+        <div class="callout stop">
+          <p><strong>The credentials files never go to the server, into email, or into a shared folder.</strong>
+          The pre-flight fails if it finds one there.</p>
+        </div>
+        <p>Later, on the same computer:</p>
+        <div class="codeblock"><pre><code># someone new: add their row to accounts.csv, then
+php deploy/accounts/make-accounts.php RN-002
+
+# a forgotten password (new password, lockout cleared, signed out everywhere)
+php deploy/accounts/make-accounts.php --reset RN-001</code></pre></div>
+        <p class="why">Nobody can change their own password in the app yet, so a reset is an administrator importing the
+          reset file it writes.</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-9">
+      <div class="step-head">
+        <span class="num">9</span>
+        <h2>Schedule the background work</h2>
+        <label class="done"><input type="checkbox" data-step="9"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>cPanel → <strong>Cron Jobs</strong> → add one job running <strong>every minute</strong> (adjust the PHP path to
+          what the Cron page shows, often <code>/usr/local/bin/ea-php84</code>):</p>
+        <div class="codeblock"><pre><code>cd /home/cpuser/dialysis-api && /usr/local/bin/php artisan schedule:run >> /dev/null 2>&1</code></pre></div>
+        <p>It runs the controls check at 06:00 and 18:00 <strong>UTC</strong> (14:00 and 02:00 in Manila) and rebuilds the
+          quality report at 02:30 UTC. The schedule runs on the server's UTC clock, not the unit's, so until that changes
+          someone opens the <strong>Controls</strong> screen each morning before the first patient.
+          Send cron failures to an email address someone reads.</p>
+        <p class="why">The controls check is what finds a cohort breach, a water exception or a failed dialyzer that got in
+          some other way. A control nobody reads is not a control.</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-10">
+      <div class="step-head">
+        <span class="num">10</span>
+        <h2>Build and upload the two clients</h2>
+        <label class="done"><input type="checkbox" data-step="10"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>On a computer with Node, from the project folder:</p>
+        <div class="codeblock"><pre><code>npm install
+npm run build -w @dialysis/bedside
+npm run build -w @dialysis/console</code></pre></div>
+        <p>Upload <code>apps/bedside/dist/</code> to <code>/bedside</code> and <code>apps/console/dist/</code> to
+          <code>/console</code> on the <strong>same domain</strong> as the API (there is no cross-origin setup). Give each
+          folder this <code>.htaccess</code>, with its own <code>RewriteBase</code>:</p>
+        <div class="codeblock"><pre><code>&lt;IfModule mod_rewrite.c&gt;
+  RewriteEngine On
+  RewriteBase /bedside/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . index.html [L]
+&lt;/IfModule&gt;</code></pre></div>
+        <p class="why">Serve everything over HTTPS: both clients keep their sign-in token in the browser, and the bedside
+          app's offline features need a secure origin.</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-11">
+      <div class="step-head">
+        <span class="num">11</span>
+        <h2>Configure the unit in Settings — before any patient</h2>
+        <label class="done"><input type="checkbox" data-step="11"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>Sign in to the console as the administrator and open <strong>Settings</strong>. Every setting explains its own
+          consequence; these must be right first:</p>
+        <ul>
+          <li><strong>Chairs and infection control.</strong> Check every chair's cohorts against the real room. A chair with
+            no cohort ticked is <em>unrestricted</em>, not unusable.</li>
+          <li><strong>High-alert drugs.</strong> A flagged drug needs a witness who is not the giver. Match the list to your policy.</li>
+          <li><strong>Benefit programme.</strong> The seed carries ₱6,350 per session and 156 sessions a year — verify both
+            against the current PhilHealth circular. Both have changed before. Settings shows the programmes but cannot add
+            one yet; a new rate is an API call, set out in the administrator's guide (<code>docs/admin-guide.html</code>).</li>
+          <li><strong>Facility timezone.</strong> Where the unit actually is. It decides when the unit's day starts, so it
+            decides whether the morning's first treatment may start.</li>
+        </ul>
+        <p>The seed's water system is called <em>RO Unit A</em>; rename it in the database to match yours.</p>
+      </div>
+    </li>
+
+    <li class="step" id="step-12">
+      <div class="step-head">
+        <span class="num">12</span>
+        <h2>Prove it works, then go live</h2>
+        <label class="done"><input type="checkbox" data-step="12"> Done</label>
+      </div>
+      <div class="step-body">
+        <p>Work through the final checklist below against the live installation. Every line is something that has gone
+          wrong somewhere, quietly.</p>
+      </div>
+    </li>
+
+  </ol>
+
+  <section class="section" id="accounts" aria-labelledby="accounts-title">
+    <h2 id="accounts-title">The sample accounts</h2>
+    <p><code>accounts.csv</code> starts with one placeholder account per role, and step 8 turns it into <code>04-accounts.sql</code>. Sign in with the employee number. Passwords and
+      PINs are on the printable sheet <code>deploy/accounts/CREDENTIALS.html</code>, generated together with that SQL —
+      they are deliberately not on this page.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Sign in</th><th>Name on the account</th><th>Role</th><th>What it is for</th><th>Bedside PIN</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">ADM-001</td><td>Site Administrator</td><td><code>admin</code></td><td>Settings and roles; can do most of the rest</td><td>—</td></tr>
+          <tr><td class="mono">ENC-001</td><td>Records Encoder</td><td><code>records</code></td><td>Registering patients, correcting demographics</td><td>—</td></tr>
+          <tr><td class="mono">BIL-001</td><td>Billing Officer</td><td><code>billing</code></td><td>Claims, remittances, invoices, payments</td><td>—</td></tr>
+          <tr><td class="mono">TEC-001</td><td>Renal Technician</td><td><code>technician</code></td><td>The morning water check; dialyzer reprocessing</td><td>—</td></tr>
+          <tr><td class="mono">HN-001</td><td>Head Nurse</td><td><code>head_nurse</code></td><td>Everything a nurse does, plus registration and lab orders</td><td>yes</td></tr>
+          <tr><td class="mono">RN-001</td><td>Dialysis Nurse</td><td><code>nurse</code></td><td>Running and charting treatments at the chair</td><td>yes</td></tr>
+          <tr><td class="mono">NEP-001</td><td>Attending Nephrologist</td><td><code>nephrologist</code></td><td>Countersigning and amending records, prescribing</td><td>yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout caution">
+      <p><strong>Rename each account to its real holder before it signs anything</strong> — a countersignature by
+      "Attending Nephrologist" attributes a legal attestation to nobody. The pre-flight warns while any placeholder name
+      is left. To rename after import:</p>
+    </div>
+    <div class="codeblock"><pre><code>UPDATE staff
+   SET first_name = 'Maria', last_name = 'Reyes', licence_no = 'PRC-0123456'
+ WHERE employee_no = 'NEP-001';</code></pre></div>
+    <p style="margin-top:10px">A unit with no nephrologist cannot close a single treatment record, and nothing can be billed.</p>
+  </section>
+
+  <section class="section" id="checklist" aria-labelledby="checklist-title">
+    <h2 id="checklist-title">Final checklist</h2>
+    <p>Against the live installation, before the first real patient.</p>
+    <ul class="checklist">
+      <li><label><input type="checkbox" data-check="water"><span>The technician records a water check on the <strong>Water</strong> screen, it shows <em>Cleared to dialyse today</em>, a nurse can start the day's first treatment — and the times on that screen match the wall clock</span></label></li>
+      <li><label><input type="checkbox" data-check="health"><span><code>/api/v1/health</code> reports <code>database: ok</code>, 69 tables, 12 views, 6 triggers</span></label></li>
+      <li><label><input type="checkbox" data-check="deleted"><span><code>preflight.php</code> and <code>generate-key.php</code> are deleted from the server</span></label></li>
+      <li><label><input type="checkbox" data-check="sheets"><span>No credentials sheet is on the server, and the local copies are destroyed once everyone had their slip</span></label></li>
+      <li><label><input type="checkbox" data-check="names"><span>Every account carries the name of the one person who holds it (no <em>Starter accounts renamed</em> warning)</span></label></li>
+      <li><label><input type="checkbox" data-check="debug"><span><code>APP_DEBUG=false</code>, confirmed by opening a missing page and seeing no stack trace</span></label></li>
+      <li><label><input type="checkbox" data-check="admin"><span>The administrator can sign in to the console</span></label></li>
+      <li><label><input type="checkbox" data-check="neph"><span>At least one nephrologist exists</span></label></li>
+      <li><label><input type="checkbox" data-check="chairs"><span>Chair cohorts in Settings match the actual rooms</span></label></li>
+      <li><label><input type="checkbox" data-check="rate"><span>The benefit case rate and allotment match the current circular</span></label></li>
+      <li><label><input type="checkbox" data-check="board"><span>The daily board loads and <strong>Generate from standing patterns</strong> works</span></label></li>
+      <li><label><input type="checkbox" data-check="bedside"><span>A nurse signs in on a bedside tablet, locks it, unlocks it with the PIN, and opens a flow sheet</span></label></li>
+      <li><label><input type="checkbox" data-check="offline"><span>An observation charted offline lands on the server after reconnecting</span></label></li>
+      <li><label><input type="checkbox" data-check="controls"><span>The <strong>Controls</strong> screen loads and, on a new installation, lists nothing</span></label></li>
+      <li><label><input type="checkbox" data-check="cron"><span>Cron has fired at least once (look in <code>storage/logs/</code>)</span></label></li>
+      <li><label><input type="checkbox" data-check="backup"><span>A database backup has been taken <strong>and restored somewhere</strong> to prove it works</span></label></li>
+      <li><label><input type="checkbox" data-check="sops"><span>The clinical thresholds match your own SOPs: total chlorine 0.1 ppm, Kt/V ≥ 1.2, URR ≥ 65%, dialyzer TCV floor 80%, UF rate concern about 13 ml/kg/h</span></label></li>
+    </ul>
+  </section>
+
+  <section class="section" id="limits" aria-labelledby="limits-title">
+    <h2 id="limits-title">Say these out loud before go-live</h2>
+    <details>
+      <summary>Known limitations of this build on shared hosting</summary>
+      <ul>
+        <li><strong>No staff management in the app.</strong> Accounts, passwords and PINs exist only through the SQL that
+          <code>make-accounts.php</code> writes; nobody can change their own password.</li>
+        <li><strong>No queue worker and no Redis.</strong> Queue, cache and sessions run in-process and on disk — honest for
+          one unit, and it stops being true the moment someone adds a background job.</li>
+        <li><strong>The bedside app shell is not cached for offline start.</strong> Charting keeps working offline once the
+          app is open, but opening it cold with no network shows nothing.</li>
+        <li><strong>No automated UI tests, and CI has never run.</strong> Both clients were checked by hand; a regression
+          will be found by a person.</li>
+        <li><strong>Some setup needs the database:</strong> shifts, machines, adding a chair, and renaming the water system.</li>
+        <li><strong>The scheduled check runs on UTC</strong> — 14:00 and 02:00 in Manila, not before the morning shift. Open the Controls screen each morning.</li>
+        <li><strong>One failed chlorine test keeps the check red for 90 days</strong> — the water list keeps every breach of the last 90 days, corrected or not. Look for new rows, not a zero.</li>
+        <li><strong>The Controls screen dates a water breach by the UTC day</strong> — a 05:30 Manila breach is listed under
+          the day before. The check that blocks treatment uses the unit's own day.</li>
+        <li><strong>CloudLinux limits apply.</strong> The nightly quality rebuild is the job most likely to hit them as years
+          of sessions accumulate; check LVE faults if the quality report goes stale.</li>
+        <li><strong>Backups are yours.</strong> These records are kept 10–15 years; cPanel's nightly overwrite is not a plan.</li>
+      </ul>
+    </details>
+  </section>
+
+  <footer>
+    One-page summary of <code>deploy/DEPLOYMENT.md</code>, which carries the reasons behind each step. Ticks on this page
+    are remembered in this browser only.
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var KEY = 'dialysis-runbook-v1';
+    var state = {};
+
+    try {
+      state = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+    } catch (e) {
+      state = {};
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify(state));
+      } catch (e) {
+        /* Private window or blocked storage: ticks simply are not remembered. */
+      }
+    }
+
+    var stepBoxes = Array.prototype.slice.call(document.querySelectorAll('input[data-step]'));
+    var checkBoxes = Array.prototype.slice.call(document.querySelectorAll('input[data-check]'));
+
+    function render() {
+      var done = 0;
+
+      stepBoxes.forEach(function (box) {
+        var step = document.getElementById('step-' + box.getAttribute('data-step'));
+        if (box.checked) done += 1;
+        if (step) step.classList.toggle('is-done', box.checked);
+      });
+
+      document.getElementById('bar').style.width = Math.round((done / stepBoxes.length) * 100) + '%';
+      document.getElementById('progress-text').textContent = done + ' of ' + stepBoxes.length + ' steps done';
+    }
+
+    stepBoxes.forEach(function (box) {
+      box.checked = state['step-' + box.getAttribute('data-step')] === true;
+      box.addEventListener('change', function () {
+        state['step-' + box.getAttribute('data-step')] = box.checked;
+        save();
+        render();
+      });
+    });
+
+    checkBoxes.forEach(function (box) {
+      box.checked = state['check-' + box.getAttribute('data-check')] === true;
+      box.addEventListener('change', function () {
+        state['check-' + box.getAttribute('data-check')] = box.checked;
+        save();
+      });
+    });
+
+    render();
+
+    /* Copy buttons, added to every command block. */
+    Array.prototype.forEach.call(document.querySelectorAll('.codeblock'), function (block) {
+      var code = block.querySelector('code');
+      if (!code) return;
+
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'copy';
+      button.textContent = 'Copy';
+      button.setAttribute('aria-label', 'Copy this command');
+
+      button.addEventListener('click', function () {
+        var text = code.textContent || '';
+        var done = function (label) {
+          button.textContent = label;
+          window.setTimeout(function () { button.textContent = 'Copy'; }, 1600);
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () { done('Copied'); }, function () { done('Select and copy'); });
+        } else {
+          var range = document.createRange();
+          range.selectNodeContents(code);
+          var selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          done('Selected');
+        }
+      });
+
+      block.appendChild(button);
+    });
+
+    /* Theme: follows the system until someone chooses. */
+    var root = document.documentElement;
+    try {
+      var chosen = localStorage.getItem(KEY + '-theme');
+      if (chosen === 'light' || chosen === 'dark') root.setAttribute('data-theme', chosen);
+    } catch (e) { /* no stored choice */ }
+
+    document.getElementById('theme-toggle').addEventListener('click', function () {
+      var current = root.getAttribute('data-theme') ||
+        (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem(KEY + '-theme', next); } catch (e) { /* not remembered */ }
+    });
+  })();
+</script>
+</body>
+</html>

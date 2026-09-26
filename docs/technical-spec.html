@@ -1,0 +1,1367 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="docs/build.php">
+<meta name="description" content="Stack, request path, API contract, rule engine, data model, modules, front end, security, tests and conventions of the Dialysis Centre System.">
+<title>Technical specification · TS·1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Libre+Franklin:ital,wght@0,400;0,500;0,600;1,400&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
+<style>
+/*
+ * The documentation set's one stylesheet. docs/build.php inlines it into every
+ * page, so each file opens from disk on its own.
+ *
+ * The identity is the project's own: the ink, paper and circuit teal that the
+ * console, the bedside app and the first two ward pages already share. Stop red
+ * and caution amber are semantic, never decoration -- in this system they mean
+ * "refused" and "tells you", and the documents keep that meaning.
+ */
+
+/* ---- Light palette: the complete set, on bare :root -------------------- */
+:root {
+  --paper: #F7F8F7;         /* Ward paper   */
+  --surface: #FFFFFF;
+  --wash: #EDF1EF;
+  --ink: #16221F;           /* Chart ink    */
+  --ink-2: #2F3D39;
+  --muted: #5C6B67;
+  --faint: #63726D;
+  --rule: #DDE3E0;          /* Hairline     */
+  --rule-strong: #BCC7C3;
+  --accent: #0E6B5E;        /* Circuit teal */
+  --accent-wash: #E4F0ED;
+  --on-accent: #FFFFFF;
+  --stop: #9C2F26;          /* Stop red     */
+  --stop-wash: #F7E9E7;
+  --caution: #9A6410;       /* Caution amber */
+  --caution-wash: #F8EFDE;
+  --pass: #2F6B3A;
+  --pass-wash: #E7F0E8;
+
+  --display: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Libre Franklin", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* ---- Dark: tokens only, never component rules --------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101614;
+    --surface: #161E1B;
+    --wash: #1C2622;
+    --ink: #E8EDEA;
+    --ink-2: #CAD4D0;
+    --muted: #A3B1AC;
+    --faint: #8E9C97;
+    --rule: #2A3632;
+    --rule-strong: #3E4C47;
+    --accent: #5BC0AD;
+    --accent-wash: #15302B;
+    --on-accent: #0B1311;
+    --stop: #EE9D94;
+    --stop-wash: #2E1B18;
+    --caution: #E0AE55;
+    --caution-wash: #2B2214;
+    --pass: #8FCB9A;
+    --pass-wash: #17281B;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #101614;
+  --surface: #161E1B;
+  --wash: #1C2622;
+  --ink: #E8EDEA;
+  --ink-2: #CAD4D0;
+  --muted: #A3B1AC;
+  --faint: #8E9C97;
+  --rule: #2A3632;
+  --rule-strong: #3E4C47;
+  --accent: #5BC0AD;
+  --accent-wash: #15302B;
+  --on-accent: #0B1311;
+  --stop: #EE9D94;
+  --stop-wash: #2E1B18;
+  --caution: #E0AE55;
+  --caution-wash: #2B2214;
+  --pass: #8FCB9A;
+  --pass-wash: #17281B;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+main:focus:not(:focus-visible) { outline: none; }
+
+.skip {
+  position: absolute; left: 16px; top: -64px; z-index: 10;
+  padding: 8px 14px; background: var(--ink); color: var(--paper);
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* ---- The binder: spine + one column -------------------------------------- */
+.frame {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 28px 16px 40px;
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+}
+
+.rail-title { display: block; padding: 0 8px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.rail-system { display: block; font-family: var(--display); font-size: 1.12rem; font-weight: 600; line-height: 1.25; }
+.rail-set {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+
+.rail-group-label {
+  margin: 20px 8px 6px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail li a {
+  display: grid; grid-template-columns: 3.3rem 1fr; align-items: baseline; gap: 8px;
+  padding: 6px 8px; border-radius: 3px;
+  color: var(--ink-2); text-decoration: none; font-size: .93rem; line-height: 1.35;
+}
+.rail li a:hover { background: var(--wash); }
+.rail-ref {
+  justify-self: start;
+  padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px;
+  font-family: var(--mono); font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.rail li a[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--accent-wash); }
+.rail li a[aria-current="page"] .rail-ref { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+main { min-width: 0; padding: 56px clamp(16px, 5vw, 72px) 96px; }
+
+/* Prose stays near 70 characters; tables and code may use the column's full width. */
+.doc-head, .contents, .doc-foot { max-width: 48rem; }
+.doc-body { max-width: 62rem; }
+.doc-body > h2, .doc-body > h3, .doc-body > h4, .doc-body > .callout, .doc-body > blockquote { max-width: 48rem; }
+
+/* ---- Document head and control block -------------------------------------- */
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+}
+.eyebrow-ref { padding: 2px 7px; margin-right: 6px; background: var(--accent); color: var(--on-accent); border-radius: 2px; letter-spacing: .06em; }
+
+h1 {
+  margin: 0 0 16px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.15rem); line-height: 1.06; letter-spacing: -.012em;
+  text-wrap: balance;
+}
+.standfirst { margin: 0; max-width: 62ch; font-size: 1.14rem; line-height: 1.55; color: var(--muted); }
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+.control {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 12px 28px;
+  margin: 28px 0 0; padding: 14px 0 16px;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.control div { min-width: 0; }
+.control dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.control dd { margin: 2px 0 0; font-size: .92rem; line-height: 1.45; overflow-wrap: break-word; }
+.control code { font-size: .82rem; }
+
+/* ---- Contents -------------------------------------------------------------- */
+.contents { margin: 32px 0 0; padding: 18px 22px 16px; background: var(--surface); border: 1px solid var(--rule); }
+.contents-title { margin: 0 0 10px; font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents > ol { columns: 2 17rem; column-gap: 32px; }
+.contents li { break-inside: avoid; margin: 0 0 6px; font-size: .93rem; line-height: 1.4; }
+.contents li ol { margin: 4px 0 2px 2.1rem; }
+.contents li li { margin-bottom: 3px; font-size: .86rem; }
+.contents a { color: var(--ink-2); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+.contents .secnum { display: inline-block; min-width: 1.8rem; margin: 0; font-size: .8rem; vertical-align: 0; }
+
+/* ---- Body ------------------------------------------------------------------ */
+.doc-body { margin-top: 2.4rem; }
+.doc-body > :first-child { margin-top: 0; }
+
+.doc-body h2 {
+  margin: 3.1rem 0 .9rem; padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display); font-weight: 600; font-size: 1.62rem; line-height: 1.2; letter-spacing: -.006em;
+  text-wrap: balance; scroll-margin-top: 16px;
+}
+.secnum {
+  display: inline-block; min-width: 1.7em; margin-right: .2em;
+  font-family: var(--mono); font-size: .66em; font-weight: 500; color: var(--accent);
+  vertical-align: .14em; font-variant-numeric: tabular-nums;
+}
+.doc-body h3 {
+  margin: 2.1rem 0 .5rem;
+  font-size: 1.12rem; font-weight: 600; line-height: 1.35; text-wrap: balance; scroll-margin-top: 16px;
+}
+.doc-body h4 {
+  margin: 1.6rem 0 .4rem;
+  font-size: 1rem; font-weight: 600; scroll-margin-top: 16px;
+}
+.doc-body p { margin: 0 0 1rem; }
+.doc-body p, .doc-body li { max-width: 70ch; }
+.doc-body ul, .doc-body ol { margin: 0 0 1.1rem; padding-left: 1.35em; }
+.doc-body li { margin: .32rem 0; }
+.doc-body li > ul, .doc-body li > ol { margin: .3rem 0 .4rem; }
+.doc-body strong { font-weight: 600; }
+/* Every h2 already carries a rule above it; a source's own --- separators would double it. */
+.doc-body hr { display: none; }
+
+.doc-body li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.35em; }
+.doc-body input[type="checkbox"] { margin: 0 .55em 0 0; accent-color: var(--accent); vertical-align: -.1em; }
+
+code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .06em .36em; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--wash); color: var(--ink);
+  overflow-wrap: break-word;
+}
+pre {
+  margin: 1.1rem 0 1.4rem; padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--wash); border: 1px solid var(--rule); border-radius: 3px;
+  font-size: .84rem; line-height: 1.58;
+}
+pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
+
+blockquote {
+  margin: 1.3rem 0; padding: 12px 18px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Tables: each scrolls inside itself, never the page -------------------- */
+.table-wrap {
+  margin: 1.2rem 0 1.5rem;
+  overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+}
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: .92rem; line-height: 1.5; font-variant-numeric: tabular-nums; }
+th {
+  padding: 9px 12px; text-align: left; vertical-align: bottom; white-space: nowrap;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--faint); background: var(--wash); border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--rule); }
+tbody tr:first-child td { border-top: 0; }
+td code { font-size: .82em; white-space: nowrap; }
+
+table.ticks th:last-child, table.ticks td:last-child { width: 4.2rem; text-align: center; }
+table.ticks td:last-child:empty::before {
+  content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-top: .2em;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* ---- Callouts -------------------------------------------------------------- */
+.callout {
+  margin: 1.4rem 0; padding: 14px 18px 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout-label, .callout .lbl {
+  display: block; margin: 0 0 6px;
+  font-family: var(--mono); font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent);
+}
+.callout-stop, .callout.hard { border-left-color: var(--stop); background: var(--stop-wash); }
+.callout-stop .callout-label, .callout.hard .lbl { color: var(--stop); }
+.callout-caution { border-left-color: var(--caution); background: var(--caution-wash); }
+.callout-caution .callout-label { color: var(--caution); }
+.callout-rule {
+  margin: 2rem 0; padding: 22px 26px 18px;
+  background: var(--accent-wash); border: 2px solid var(--accent);
+}
+.callout-rule .callout-label + p {
+  font-family: var(--display); font-size: 1.36rem; line-height: 1.38; font-weight: 500; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* ---- The user's guide keeps its own components ----------------------------- */
+section.block { scroll-margin-top: 16px; }
+.lede { color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.shifts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px;
+  margin: 1.2rem 0; background: var(--rule); border: 1px solid var(--rule);
+}
+.shift { padding: 14px 16px; background: var(--surface); }
+.shift .code { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--accent); }
+.shift .time { display: block; font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.shift .days { font-size: .84rem; color: var(--faint); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 26px 0 28px; border-top: 1px solid var(--rule); }
+.stage:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .stage { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 28px; } }
+.gutter { display: flex; flex-direction: column; gap: 6px; }
+.num { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); line-height: 1.5; }
+.stage h3 { margin-top: 0; }
+.stage p { color: var(--muted); }
+.stage strong { color: var(--ink); }
+
+.checks { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; margin: 0; font-size: .94rem; color: var(--muted); }
+.checks li::before { content: ""; width: 7px; height: 7px; margin-top: .55em; border-radius: 1px; background: var(--accent); }
+.checks li.stops::before { background: var(--stop); }
+.checks li.warns::before { background: var(--caution); }
+.checks b { color: var(--ink); font-weight: 600; }
+.key-stops { color: var(--stop); font-weight: 600; }
+.key-warns { color: var(--caution); font-weight: 600; }
+.key-note { color: var(--accent); font-weight: 600; }
+
+.tag { padding: 2px 8px; border-radius: 2px; font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.tag.stops { color: var(--stop); background: var(--stop-wash); }
+.tag.warns { color: var(--caution); background: var(--caution-wash); }
+td.role { font-family: var(--mono); font-size: .84rem; white-space: nowrap; }
+td.what { color: var(--muted); }
+td.verdict { white-space: nowrap; }
+ol.plain, ul.plain { color: var(--muted); }
+ol.plain b, ul.plain b { color: var(--ink); font-weight: 600; }
+
+/* ---- Footer ------------------------------------------------------------------ */
+.doc-foot { margin-top: 4.5rem; padding-top: 14px; border-top: 2px solid var(--ink); font-size: .86rem; color: var(--muted); }
+.doc-foot p { margin: 0 0 6px; max-width: 72ch; }
+.doc-foot-ref span { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Phones and narrow windows: the spine becomes a strip ------------------ */
+@media (max-width: 900px) {
+  .frame { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; height: auto;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; scrollbar-width: thin; padding: 10px 16px;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .rail-title, .rail-group-label { display: none; }
+  .rail-group { display: contents; }
+  .rail ul { flex-direction: row; gap: 6px; }
+  .rail li a { display: flex; gap: 6px; white-space: nowrap; padding: 6px 8px; }
+  main { padding-top: 32px; }
+  .contents > ol { columns: 1; }
+}
+
+/* ---- Print: A4, no spine, reference and issue on every page ---------------- */
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: "IBM Plex Mono", Consolas, monospace; font-size: 7.5pt; color: #555; }
+}
+
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    --paper: #FFFFFF; --surface: #FFFFFF; --wash: #F1F4F2;
+    --ink: #000000; --ink-2: #222222; --muted: #3A4643; --faint: #4F5C58;
+    --rule: #C9D1CE; --rule-strong: #9AA6A2;
+    --accent: #0E6B5E; --accent-wash: #EEF5F3; --on-accent: #FFFFFF;
+    --stop: #8A261E; --stop-wash: #FBF1EF; --caution: #7F520C; --caution-wash: #FBF5EA;
+    --pass: #2F6B3A; --pass-wash: #EEF5EF;
+    color-scheme: light;
+  }
+  body { font-size: 10.5pt; line-height: 1.5; }
+  .frame { display: block; }
+  .rail, .contents, .skip { display: none !important; }
+  main { padding: 0; }
+  .doc-head, .doc-body, .doc-foot { max-width: none; }
+  .doc-body p, .doc-body li { max-width: none; }
+  h1 { font-size: 24pt; }
+  .doc-body h2 { margin-top: 1.4rem; padding-top: 0; border-top: 0; font-size: 15pt; break-after: avoid; }
+  .doc-body h3, .doc-body h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  pre, blockquote, .callout, .control, tr, .stage, .shift, .checks li { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 8.8pt; }
+  thead { display: table-header-group; }
+  pre { white-space: pre-wrap; }
+  pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  a { color: inherit; text-decoration: none; }
+  .doc-body a[href^="https://"]::after { content: " <" attr(href) ">"; font-size: 7.5pt; color: #4F5C58; overflow-wrap: anywhere; }
+}
+
+@page { @bottom-left { content: "TS·1 · Technical specification · Issue 1 · 26 September 2026"; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the document</a>
+<div class="frame">
+<nav class="rail" aria-label="Documentation set"><a class="rail-title" href="index.html"><span class="rail-system">Dialysis Centre System</span><span class="rail-set">Documentation · Issue 1</span></a><div class="rail-group"><p class="rail-group-label">Start</p><ul><li><a href="index.html"><span class="rail-ref">Index</span><span class="rail-name">Start here</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Understand it</p><ul><li><a href="design-spec.html"><span class="rail-ref">DS·1</span><span class="rail-name">Design specification</span></a></li><li><a href="technical-spec.html" aria-current="page"><span class="rail-ref">TS·1</span><span class="rail-name">Technical specification</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Run it</p><ul><li><a href="users-guide.html"><span class="rail-ref">UG·1</span><span class="rail-name">User&#039;s guide</span></a></li><li><a href="admin-guide.html"><span class="rail-ref">AG·1</span><span class="rail-name">Administrator&#039;s guide</span></a></li><li><a href="troubleshooting.html"><span class="rail-ref">TG·1</span><span class="rail-name">Troubleshooting</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Install it</p><ul><li><a href="deployment-guide.html"><span class="rail-ref">DG·1</span><span class="rail-name">Deployment guide</span></a></li></ul></div><div class="rail-group"><p class="rail-group-label">Decide and take over</p><ul><li><a href="marketing.html"><span class="rail-ref">MK·1</span><span class="rail-name">Product overview</span></a></li><li><a href="handover.html"><span class="rail-ref">HO·1</span><span class="rail-name">Handover</span></a></li></ul></div></nav>
+<main id="main" tabindex="-1">
+<header class="doc-head"><p class="eyebrow"><span class="eyebrow-ref">TS·1</span> Technical specification</p><h1>How it is built</h1><p class="standfirst">The stack, a request followed from the network to the database and back, the API contract, the rule engine and its order of checks, the data model and its constraints, the clients, security, tests, and the traps.</p><dl class="control"><div><dt>Reference</dt><dd>TS·1</dd></div><div><dt>Version</dt><dd>Issue 1</dd></div><div><dt>Issued</dt><dd><time datetime="2026-09-26">26 September 2026</time></dd></div><div><dt>Written for</dt><dd>Developers maintaining or extending the code.</dd></div><div><dt>Applies to</dt><dd>apps/api (Laravel 12.67), apps/bedside, apps/console and packages/*, as of 26 September 2026.</dd></div><div><dt>Source</dt><dd><code>docs/src/technical-spec.md</code></dd></div></dl></header>
+<nav class="contents" aria-label="Contents"><p class="contents-title">Contents</p><ol><li><a href="#stack"><span class="secnum">1</span> Stack</a></li><li><a href="#map"><span class="secnum">2</span> Repository map</a></li><li><a href="#request"><span class="secnum">3</span> A request, end to end</a><ol><li><a href="#request-offline">The same path, offline</a></li></ol></li><li><a href="#contract"><span class="secnum">4</span> API contract</a><ol><li><a href="#routes">The routes</a></li></ol></li><li><a href="#engine"><span class="secnum">5</span> The rule engine</a><ol><li><a href="#order">The order of checks</a></li><li><a href="#adequacy">Adequacy, computed twice on purpose</a></li><li><a href="#water-gate">The water gate</a></li><li><a href="#known-defects">Known defects</a></li></ol></li><li><a href="#data-model"><span class="secnum">6</span> Data model</a></li><li><a href="#modules"><span class="secnum">7</span> Modules</a></li><li><a href="#front-end"><span class="secnum">8</span> Front end</a></li><li><a href="#security"><span class="secnum">9</span> Security</a></li><li><a href="#tests"><span class="secnum">10</span> Tests</a></li><li><a href="#traps"><span class="secnum">11</span> Conventions and traps</a></li></ol></nav>
+<article class="doc-body">
+<h2 id="stack"><span class="secnum">1</span> Stack</h2>
+<p>Versions are the ones resolved in <code>apps/api/composer.lock</code> and <code>package-lock.json</code>, and the ones the development machine ran on 26 September 2026.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Stack"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Language</td>
+<td>PHP</td>
+<td>8.4.24 on the development machine</td>
+<td><code>composer.json</code> requires <code>^8.2</code>; the CI workflow tests 8.3 and 8.4</td>
+</tr>
+<tr>
+<td>Framework</td>
+<td>Laravel</td>
+<td>12.67.0</td>
+<td>JSON API only; serves no HTML</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>Laravel Sanctum</td>
+<td>4.3.3</td>
+<td>Personal access tokens, not cookie mode</td>
+</tr>
+<tr>
+<td>Dates</td>
+<td>Carbon</td>
+<td>3.13.2</td>
+<td></td>
+</tr>
+<tr>
+<td>Database</td>
+<td>MySQL</td>
+<td>8.4.9 in development; <code>mysql:8.0</code> in CI</td>
+<td>8.0.16 or newer is required (<a href="#data-model">§6</a>); MariaDB is not supported</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>Pest on PHPUnit</td>
+<td>3.8.7 on 11.5.56</td>
+<td>Always against MySQL</td>
+</tr>
+<tr>
+<td>Static analysis</td>
+<td>Larastan on PHPStan</td>
+<td>3.10.0 on 2.2.8</td>
+<td>Level 8</td>
+</tr>
+<tr>
+<td>Formatting</td>
+<td>Laravel Pint</td>
+<td>1.30.5</td>
+<td></td>
+</tr>
+<tr>
+<td>Client runtime</td>
+<td>Node.js</td>
+<td>24.18 in development; 22 in CI</td>
+<td>Build only; nothing runs Node in production</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>React</td>
+<td>19.2.8</td>
+<td>Both clients</td>
+</tr>
+<tr>
+<td>Build</td>
+<td>Vite, with the React plugin</td>
+<td>8.2.1, plugin 6.0.5</td>
+<td></td>
+</tr>
+<tr>
+<td>Types</td>
+<td>TypeScript</td>
+<td>7.0.2</td>
+<td>Strict, <code>tsc --noEmit</code> in every workspace</td>
+</tr>
+<tr>
+<td>Validation (client)</td>
+<td>Zod</td>
+<td>4.4.3</td>
+<td>Schemas mirror the API resources</td>
+</tr>
+<tr>
+<td>Offline store</td>
+<td>Dexie (IndexedDB)</td>
+<td>4.4.5</td>
+<td>Bedside only</td>
+</tr>
+<tr>
+<td>Client tests</td>
+<td>Vitest</td>
+<td>3.2.7</td>
+<td>Clinical maths and the confirm-dialog sweep</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td>league/commonmark</td>
+<td>2.10.0</td>
+<td>Already in <code>apps/api/vendor</code>; used only by <code>docs/build.php</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Not installed, on purpose for now: Redis, Horizon, Reverb, Playwright. Queue, cache and session use the <code>sync</code> and <code>file</code> drivers.</p>
+<h2 id="map"><span class="secnum">2</span> Repository map</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Repository map"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/api/app/Domain/Core</code></td>
+<td>Patients, staff, authentication, settings, the facility calendar (20 files)</td>
+</tr>
+<tr>
+<td><code>apps/api/app/Domain/Clinical</code></td>
+<td>Sessions, prescriptions, flow sheet, signing, serology, labs, adequacy (45 files)</td>
+</tr>
+<tr>
+<td><code>apps/api/app/Domain/Ops</code></td>
+<td>Board, scheduling, water, machines, dialyzer reuse, stock, reports, the two console commands (28 files)</td>
+</tr>
+<tr>
+<td><code>apps/api/app/Domain/Billing</code></td>
+<td>Claims, invoices, the benefit ledger (18 files)</td>
+</tr>
+<tr>
+<td><code>apps/api/app/Domain/Sync</code></td>
+<td>The sync batch processor and its three operation handlers (6 files)</td>
+</tr>
+<tr>
+<td><code>apps/api/app/Support</code></td>
+<td>Auditing, generated-column handling, the baseline loader, the domain exception (6 files)</td>
+</tr>
+<tr>
+<td><code>apps/api/app/Http</code></td>
+<td>The two middlewares and the base controller (3 files)</td>
+</tr>
+<tr>
+<td><code>apps/api/routes/api.php</code></td>
+<td>The live API — 80 routes. <code>api.php.bundle</code> is the original design's list, kept for reference</td>
+</tr>
+<tr>
+<td><code>apps/api/routes/console.php</code></td>
+<td>The schedule</td>
+</tr>
+<tr>
+<td><code>apps/api/database/schema/mysql-schema.sql</code></td>
+<td>The baseline schema. Never edited</td>
+</tr>
+<tr>
+<td><code>apps/api/database/migrations</code></td>
+<td>The three changes made after the baseline</td>
+</tr>
+<tr>
+<td><code>apps/api/database/mysql-seed.sql</code></td>
+<td>Reference data, safe to re-run</td>
+</tr>
+<tr>
+<td><code>apps/api/database/mysql-smoke-test.sql</code></td>
+<td>Five hard database assertions; loads fixtures; fresh database only</td>
+</tr>
+<tr>
+<td><code>apps/api/verify/verify_sync.php</code></td>
+<td>Sixteen sync-protocol checks, plain PHP, no Laravel</td>
+</tr>
+<tr>
+<td><code>apps/api/tests/Feature</code></td>
+<td>18 Pest files, 282 tests</td>
+</tr>
+<tr>
+<td><code>apps/bedside/src</code></td>
+<td>The tablet app: sign-in, board, lifecycle, flow sheet, outbox, sync (18 files)</td>
+</tr>
+<tr>
+<td><code>apps/console/src</code></td>
+<td>The desk app: 11 views and their components (20 files)</td>
+</tr>
+<tr>
+<td><code>packages/domain</code></td>
+<td>Kt/V, URR, UF rate, IDWG — pure functions, cited, tested</td>
+</tr>
+<tr>
+<td><code>packages/api-client</code></td>
+<td>Typed fetch calls and Zod schemas for every resource the clients read</td>
+</tr>
+<tr>
+<td><code>packages/ui</code></td>
+<td>The shared confirmation dialog, and the test that keeps <code>window.confirm</code> out</td>
+</tr>
+<tr>
+<td><code>deploy/</code></td>
+<td>The no-shell deployment bundle (<a href="deployment-guide.html">DG·1</a>)</td>
+</tr>
+<tr>
+<td><code>docs/</code></td>
+<td>This documentation set and its builder</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="request"><span class="secnum">3</span> A request, end to end</h2>
+<p>Starting a treatment, <code>POST /api/v1/sessions/{session}/start</code>, is the request with the most rules behind it. In order:</p>
+<ol>
+<li><strong>Routing.</strong> <code>routes/api.php</code> puts the route in the <code>v1</code> group behind three middlewares: <code>auth:sanctum</code> (a valid bearer token), <code>device</code> (<code>EnsureTokenDevice</code>) and <code>log.access</code> (<code>LogRecordAccess</code>).</li>
+<li><strong>Authentication.</strong> Sanctum resolves the token to a <code>Staff</code> model. No token, an expired token or a revoked one: <strong>401</strong>.</li>
+<li><strong>Device binding.</strong> <code>EnsureTokenDevice</code> compares the token's <code>device_id</code> with the <code>X-Device-Id</code> header. A mismatch <strong>deletes the token</strong>, writes a <code>device_mismatch</code> row to <code>login_events</code>, and answers <strong>401</strong> — the credential is treated as copied.</li>
+<li><strong>Binding the session.</strong> <code>{session}</code> is resolved by <code>public_id</code>. A value that is not a 26-character Crockford ULID is rejected before any query runs: <strong>404</strong>, exactly as for an id that does not exist.</li>
+<li><strong>Validation.</strong> <code>StartSessionRequest</code> checks shapes and ranges — for example <code>machine_id</code> must exist, and <code>cohort_override_reason</code>, if present, must be 10 to 255 characters. A failure is <strong>422</strong> with an <code>errors</code> map.</li>
+<li><strong>Authorisation.</strong> <code>TreatmentSessionPolicy::chart</code> refuses an inactive account or a role that does not chart (<strong>403</strong>, permanent) and a locked session (<strong>409</strong>, <em>&quot;Corrections go through the amendment path&quot;</em> — a matter of timing, which a tablet that was offline needs to tell apart from a lack of permission).</li>
+<li><strong>The service.</strong> <code>SessionService::start</code> runs inside one database transaction and checks, in this order: the state machine allows <code>checked_in → in_progress</code>; a pre-dialysis weight exists; the water gate for the session's date is open; the machine is in service or standby; the chair and machine suit the patient's cohort and the machine carries no other cohort (or a reason was given, in which case the override note is written now); the dialyzer, if one was named, is this patient's, at or above 80% of its original volume and within its count. Any refusal throws, and the transaction rolls back — including an override note already written, so the chart never records an override for a treatment that did not start.</li>
+<li><strong>The write.</strong> The unit that passed the dialyzer check is stamped on the session ahead of anything the request sent, together with the delivered settings and <code>started_at</code>. The model's <code>saving</code> hook strips generated columns so MySQL does not reject the write; <code>refresh()</code> reads them back so the response is not missing them.</li>
+<li><strong>The audit.</strong> <code>AuditObserver</code>, attached through the <code>Auditable</code> trait, writes the before-and-after of the changed columns to <code>audit_logs</code>.</li>
+<li><strong>The response.</strong> <code>TreatmentSessionResource</code> at the top level (no <code>data</code> envelope), plus <code>cohort_overrides</code> — empty unless a breach was overridden — and <code>machine_warnings</code>, the non-blocking hygiene notes. <strong>200</strong>.</li>
+<li><strong>After the response.</strong> <code>LogRecordAccess::terminate</code> writes a <code>record_access_logs</code> row: who, which patient, which route, from which address. It runs after the response is sent, so a chart view is never slowed by its own log, and only for responses below 400.</li>
+</ol>
+<p>A domain refusal at step 7 renders through <code>DomainRuleException::render</code> as <code>{&quot;message&quot;: &quot;…&quot;}</code> with <strong>422</strong>, or <strong>409</strong> for its conflict subclasses — a locked session, a duplicate observation, an infection-control breach. The breach adds <code>violations</code>, <code>override_with: &quot;cohort_override_reason&quot;</code> and <code>override_note</code>, so a client never has to guess the way through.</p>
+<h3 id="request-offline">The same path, offline</h3>
+<p>A tablet that charted offline sends <code>POST /api/v1/sync</code> with a <code>batch_uuid</code>, its <code>device_id</code> and up to 500 operations, each with an <code>op_uuid</code>, a <code>type</code> and a <code>payload</code>. <code>SyncBatchProcessor</code>:</p>
+<ol>
+<li>returns the stored response verbatim if the <code>batch_uuid</code> was seen before, touching no clinical table (<code>sync_batches.result</code> is <code>LONGTEXT</code> so the replay is byte-identical);</li>
+<li>otherwise runs each operation <strong>in its own transaction</strong> through the handler registered for its type — <code>session.upsert</code>, <code>vital.append</code> or <code>event.append</code> — and records a verdict: <code>applied</code>, <code>duplicate</code>, <code>conflict</code> or <code>rejected</code>, with a message;</li>
+<li>never lets an exception escape into the batch response: a failed operation is logged as <code>sync operation failed</code> and reported as <code>rejected</code>, and the rest of the batch still applies.</li>
+</ol>
+<p><code>vital.append</code> and <code>event.append</code> call the same <code>FlowSheetService</code> methods the online endpoints call. <code>session.upsert</code> accepts observations and delivered settings only and rejects, naming them, any payload carrying a lifecycle field, a chair or machine, dialyzer fields, adequacy values, the dry weight, or attribution. A write to a locked or already-ended session comes back as <code>conflict</code> with the server's state attached.</p>
+<h2 id="contract"><span class="secnum">4</span> API contract</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: API contract"><table>
+<thead>
+<tr>
+<th>Convention</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base path</td>
+<td><code>/api/v1</code></td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td><code>Authorization: Bearer &lt;token&gt;</code> on everything except <code>health</code>, <code>auth/login</code> and <code>auth/pin-unlock</code></td>
+</tr>
+<tr>
+<td>Device</td>
+<td><code>X-Device-Id</code> on every authenticated call. Leaving it off signs the user out, because a mismatch revokes the token</td>
+</tr>
+<tr>
+<td>Body</td>
+<td>JSON in, JSON out. Resources at the top level, no <code>data</code> envelope. Paginated collections keep Laravel's <code>data</code>, <code>links</code> and <code>meta</code> — a test pins that shape, because <code>packages/api-client</code> parses it</td>
+</tr>
+<tr>
+<td>Identifiers</td>
+<td>Patients, staff and sessions by <code>public_id</code> (ULID). Claims by <code>claim_no</code>, invoices by <code>invoice_no</code>. Reference rows — stations, machines, shifts, water systems, medications, payers, items, lab orders — by their integer <code>id</code>, because the baseline gives them no ULID</td>
+</tr>
+<tr>
+<td>Times</td>
+<td>ISO 8601 with an offset. Stored as <code>DATETIME(3)</code> in UTC. A raw query-builder row is converted before it leaves the server</td>
+</tr>
+<tr>
+<td>Money and weights</td>
+<td>Decimal strings, never floats. Money is <code>DECIMAL(12,2)</code>, weights <code>DECIMAL(6,2)</code>; arithmetic on the server uses bcmath</td>
+</tr>
+<tr>
+<td>Derived values</td>
+<td>Computed by the server; a client's copy is replaced (<a href="#engine">§5</a>)</td>
+</tr>
+<tr>
+<td>Refusals</td>
+<td><code>{&quot;message&quot;: &quot;…&quot;}</code>; validation adds <code>errors</code></td>
+</tr>
+</tbody>
+</table></div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: API contract"><table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>200, 201</td>
+<td>Done; 201 when something was created — an observation, a dose, a claim, a water check, a stock movement</td>
+</tr>
+<tr>
+<td>401</td>
+<td>No valid token — or the token was just revoked because it arrived from another device</td>
+</tr>
+<tr>
+<td>403</td>
+<td>The role or account may never do this</td>
+</tr>
+<tr>
+<td>404</td>
+<td>No such record, or a malformed ULID</td>
+</tr>
+<tr>
+<td>409</td>
+<td>The record changed under you: a locked session, a duplicate observation, an infection-control breach, a payment on an invoice that cannot take one</td>
+</tr>
+<tr>
+<td>422</td>
+<td>Validation failed, or a domain rule refused</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Throttled: sign-in 5 a minute, PIN unlock 10 a minute, sync 60 a minute</td>
+</tr>
+<tr>
+<td>503</td>
+<td><code>GET /api/v1/health</code> found a failing check</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="routes">The routes</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The routes"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Routes</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Health and sign-in</td>
+<td>4</td>
+<td><code>GET health</code>, <code>POST auth/login</code>, <code>POST auth/pin-unlock</code>, <code>POST auth/logout</code></td>
+</tr>
+<tr>
+<td>Sync</td>
+<td>2</td>
+<td><code>GET sync/bootstrap</code>, <code>POST sync</code></td>
+</tr>
+<tr>
+<td>Treatment sessions</td>
+<td>13</td>
+<td>list, show, check-in, start, end, vitals, events, medications, both signatures, amend</td>
+</tr>
+<tr>
+<td>Patients and their clinical record</td>
+<td>21</td>
+<td>registry, dry weights, serology, prescriptions, standing schedule, status, available chairs, dialyzers, lab orders and results</td>
+</tr>
+<tr>
+<td>Board</td>
+<td>2</td>
+<td><code>GET board</code>, <code>POST board/generate</code></td>
+</tr>
+<tr>
+<td>Billing</td>
+<td>14</td>
+<td>claims, claimable sessions, remittance, outstanding; invoices, invoiceable sessions, issue, payments, void</td>
+</tr>
+<tr>
+<td>Water, machines, dialyzers, stock</td>
+<td>13</td>
+<td>water logs; machine list, show, maintenance, disinfection; dialyzer history and reprocessing; stock, lots, receipts, issues</td>
+</tr>
+<tr>
+<td>Reports</td>
+<td>5</td>
+<td>quality, utilisation, and the three detective controls</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>6</td>
+<td>read all; facility; chair cohorts; high-alert flag; staff roles; benefit programmes</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>80</strong></td>
+<td>37 GET, 37 POST, 3 PATCH, 2 PUT, 1 DELETE</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>php artisan route:list</code> prints the full list with middleware.</p>
+<h2 id="engine"><span class="secnum">5</span> The rule engine</h2>
+<p>Twelve invariants, each enforced twice. If you change code near one, run its test and say in your summary that you did.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The rule engine"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Rule</th>
+<th>Service</th>
+<th>Database backstop</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>An HBsAg-reactive patient never occupies a non-HBV chair or machine</td>
+<td><code>CohortGuard</code>; <code>SessionService</code>, in <code>assertInfectionControl</code></td>
+<td><code>v_cohort_violation</code> (detective)</td>
+<td><em>refuses a machine dedicated to another cohort</em> — MachineAndStockTest</td>
+</tr>
+<tr>
+<td>1b</td>
+<td>A machine never carries one cohort to another without disinfection</td>
+<td><code>MachineService</code>, in <code>cohortCarriedOver</code></td>
+<td><code>v_cohort_violation</code> (detective)</td>
+<td><em>refuses a machine that last treated a different cohort with no clean since</em> — MachineAndStockTest</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Exactly one active prescription per patient</td>
+<td><code>PrescriptionService</code></td>
+<td>triggers <code>hd_prescriptions_bi</code>, <code>_bu</code></td>
+<td><em>never allows two overlapping prescriptions</em> — ClinicalInvariantsTest; <em>refuses to widen one prescription over another</em> — SessionLifecycleTest</td>
+</tr>
+<tr>
+<td>3</td>
+<td>A signed session is immutable except through amendment</td>
+<td><code>SessionLockService</code></td>
+<td>trigger <code>treatment_sessions_bu</code></td>
+<td><em>rejects a clinical edit to a locked session</em> — ClinicalInvariantsTest</td>
+</tr>
+<tr>
+<td>4</td>
+<td>The billing columns stay writable on a locked session</td>
+<td><code>SessionLockService</code>, its <code>ADMIN_COLUMNS</code></td>
+<td>the same trigger's column list</td>
+<td><em>still accepts the billing link on a locked session</em> — ClinicalInvariantsTest</td>
+</tr>
+<tr>
+<td>5</td>
+<td>One chair holds one patient per shift per day</td>
+<td><code>SchedulingService</code></td>
+<td>unique key <code>ts_slot_station_uq</code></td>
+<td><em>cannot double-book a chair in the same shift</em> — ClinicalInvariantsTest</td>
+</tr>
+<tr>
+<td>6</td>
+<td>A session is billed at most once</td>
+<td><code>BenefitLedger</code></td>
+<td>primary key of <code>claim_sessions</code> on <code>session_id</code></td>
+<td><em>refuses to bill the same session twice and names the claim that has it</em> — BillingTest</td>
+</tr>
+<tr>
+<td>7</td>
+<td>A high-alert drug needs a witness, and never the person giving it</td>
+<td><code>FlowSheetService</code>, in <code>administer</code></td>
+<td>trigger <code>medication_administrations_bi</code></td>
+<td><em>requires a witness for high-alert medication</em> — ClinicalInvariantsTest; <em>refuses a high-alert dose the giver witnessed themselves</em> — SessionLifecycleTest</td>
+</tr>
+<tr>
+<td>8</td>
+<td>A reused dialyzer below 80% of its original volume, past its count, or another patient's is never issued</td>
+<td><code>DialyzerReuseService</code></td>
+<td><code>v_dialyzer_status</code> (detective)</td>
+<td><em>refuses a dialyzer below 80% of its original total cell volume</em> — OpsControlsTest</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Total chlorine above 0.1 ppm blocks the day's first session</td>
+<td><code>WaterComplianceService</code></td>
+<td><code>v_water_exceptions</code> (detective)</td>
+<td><em>refuses to start when total chlorine is over the action limit</em> — OpsControlsTest</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Every chart view is logged</td>
+<td><code>LogRecordAccess</code> middleware</td>
+<td>—</td>
+<td><em>logs a chart view to record_access_logs</em> — AuditingTest</td>
+</tr>
+<tr>
+<td>11</td>
+<td>A lot's balance moves only through a movement row</td>
+<td><code>StockService</code></td>
+<td>trigger <code>stock_transactions_ai</code>, check <code>sl_qty_ck</code></td>
+<td><em>lets the trigger move the balance, never the service</em> — MachineAndStockTest</td>
+</tr>
+</tbody>
+</table></div>
+<p>Rules 1, 8 and 9 have detective views as their database half. Those views are the backstop, not the control: all three are refused at the service boundary, where they can still prevent something. <code>dialysis:check-controls</code> reads the views twice a day and exits non-zero while anything is outstanding.</p>
+<h3 id="order">The order of checks</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: The order of checks"><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Checks, in order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Check-in</td>
+<td>state <code>scheduled</code>; prescription and dry weight in force on the session date looked up; machine usable; infection control (override writes its note); then pre-dialysis values saved, dry weight and prescription snapshotted, primary nurse defaulted to the caller</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>state <code>checked_in</code>; pre-dialysis weight present; water gate; machine usable; infection control; dialyzer issuable, then issued; then settings and <code>started_at</code> saved</td>
+</tr>
+<tr>
+<td>End</td>
+<td>state <code>in_progress</code>; reason decides <code>completed</code> or <code>aborted</code>; Kt/V and URR derived from the samples and placed ahead of anything sent</td>
+</tr>
+<tr>
+<td>Nurse signature</td>
+<td>not locked; <code>pre_weight_kg</code>, <code>post_weight_kg</code>, <code>started_at</code>, <code>ended_at</code> and <code>primary_nurse_id</code> all present, or the refusal names the missing ones</td>
+</tr>
+<tr>
+<td>Countersignature</td>
+<td>not locked; locks the record if both signatures are now present</td>
+</tr>
+<tr>
+<td>Amendment</td>
+<td>locked; a reason; none of <code>id</code>, <code>public_id</code>, <code>patient_id</code>, <code>locked_at</code>; then <code>SET @allow_amendment = 1</code> for this connection, the change, the note, and back to 0 in a <code>finally</code></td>
+</tr>
+<tr>
+<td>Claim</td>
+<td>sessions exist and belong to the patient; each is locked, billable, completed and unclaimed; a programme is in force; all share one programme and one benefit period; the count fits what remains; then numbered and priced</td>
+</tr>
+</tbody>
+</table></div>
+<p>Check-in and start each run in one transaction, because some of their checks write — an override note, a dialyzer stamped as issued — and a later refusal must take those writes back with it.</p>
+<h3 id="adequacy">Adequacy, computed twice on purpose</h3>
+<p><code>packages/domain/src/index.ts</code> and <code>app/Domain/Clinical/Adequacy.php</code> are twins. The tablet computes so the nurse sees a result at the chair; the server computes because its number is the one stored. Both are pinned to one worked example, in <code>packages/domain/src/index.test.ts</code> and <code>tests/Feature/AdequacyTest.php</code>:</p>
+<pre tabindex="0"><code class="language-text">pre-BUN 60, post-BUN 20, 4.0 h, 3.0 L removed, 70 kg post weight
+Kt/V = -ln(0.33333 - 0.008 × 4) + (4 - 3.5 × 0.33333) × (3.0/70) = 1.32
+URR  = (60 - 20) / 60 × 100 = 66.7%
+</code></pre>
+<p>Change one and you change the other and both tests. Every constant is cited in the source: Kt/V ≥ 1.2 and URR ≥ 65% from KDOQI 2015, the UF-rate concern threshold of 13 mL/kg/h from Flythe 2011, total chlorine 0.1 ppm from AAMI/ISO 23500, the 80% dialyzer volume floor from the schema and <code>v_dialyzer_status</code>. A Kt/V measured by the machine (<code>online_clearance</code>, <code>ionic</code>) is kept as sent; so is <code>equilibrated</code>, an equation this code has not been given.</p>
+<h3 id="water-gate">The water gate</h3>
+<p><code>WaterComplianceService::startGate()</code> makes the one decision that both the refusal and the Water screen use. The day's first start needs the latest check of the unit's day to have recorded total chlorine at or below 0.1 ppm. Once any start has happened that day, a start is allowed if a passing check existed at any point in the day — the original authors' &quot;not every needle&quot; policy — or if the latest check passes. A failing re-test at noon is shown on the Water screen but does not stop the 13:00 start; that is an open question for the clinical lead, not a bug (<a href="design-spec.html#open-questions">DS·1 §9</a>). &quot;Today&quot; is the unit's day from <code>FacilityCalendar</code>, and a check timed more than two minutes in the future is refused.</p>
+<h3 id="known-defects">Known defects</h3>
+<p>Found while writing this document, and left for a separate change rather than fixed inside a documentation task:</p>
+<ul>
+<li><strong>A client's Kt/V or URR is stored when the BUN samples are missing.</strong> <code>SessionService::end()</code> derives adequacy only when both BUN values are present; otherwise a <code>ktv</code> or <code>urr_pct</code> sent in the request is saved as sent. The bedside app never sends either, so no screen can do this, but a direct API call can — against the rule that the server never stores a derived value it cannot compute.</li>
+<li><strong>Sync verdicts carry the internal row id.</strong> An <code>applied</code> verdict includes <code>server_id</code>, the BIGINT primary key of the row written. <code>verify/verify_sync.php</code> mirrors it. It contradicts &quot;the BIGINT id never leaves the server&quot;; nothing in the clients depends on it.</li>
+<li><strong>The locked-session trigger covers 71 of the 95 columns.</strong> <code>treatment_sessions_bu</code> fingerprints a fixed list with <code>CONCAT_WS</code>, which skips NULLs, so moving a value between two adjacent nullable columns leaves the fingerprint unchanged; and six clinical columns — the four standing blood pressures, <code>pre_assessment</code> and <code>checked_in_at</code> — are outside the list. The application refuses every write to a locked session, so this matters only for direct SQL.</li>
+<li><strong>The scheduler runs on UTC.</strong> <code>config/app.php</code> fixes the application timezone to UTC and <code>routes/console.php</code> schedules in it, so the twice-daily check runs at 06:00 and 18:00 UTC — 14:00 and 02:00 in Manila — not before the morning shift as its comment intends. <code>APP_TIMEZONE</code> in <code>.env</code> is not read.</li>
+<li><strong>A corrected water breach keeps <code>check-controls</code> failing for 90 days.</strong> <code>v_water_exceptions</code> lists every breach of the last 90 days whether or not an action was recorded, and the command exits non-zero while any row is listed — so a single failed test makes the twice-daily check fail at every run for three months, which trains people to ignore it.</li>
+<li><strong>Claims never reach the audit log.</strong> <code>Claim</code> carries the <code>Auditable</code> trait, but <code>BenefitLedger</code> creates and updates claims, and sets a session's billing link, with the query builder, which fires no model events. A claim's trail is <code>claim_status_histories</code> — every status with who and a remark — plus its own amount columns; there is no before-and-after for a remittance that is recorded wrongly.</li>
+<li><strong><code>standing_schedules</code> has an insert trigger but no update trigger</strong>, so an overlapping pattern written by a direct <code>UPDATE</code> would pass the database. The service refuses it.</li>
+</ul>
+<h2 id="data-model"><span class="secnum">6</span> Data model</h2>
+<p>69 tables: 66 in the baseline, three added by migrations. 12 views, 6 triggers, 117 foreign keys, 64 CHECK constraints, 238 indexes, 16 stored generated columns. MySQL 8.0.16 or newer, because earlier versions parse CHECK constraints and silently ignore them, and the quality view needs <code>LATERAL</code> (8.0.14).</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Data model"><table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Tables</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The unit and its people (9)</td>
+<td><code>facilities</code>, <code>stations</code>, <code>station_cohorts</code>, <code>shifts</code>, <code>staff</code>, <code>roles</code>, <code>role_staff</code>, <code>staff_rosters</code>, <code>staff_roster_stations</code></td>
+</tr>
+<tr>
+<td>Patient registry (8)</td>
+<td><code>patients</code>, <code>patient_identifiers</code>, <code>patient_contacts</code>, <code>patient_coverages</code>, <code>patient_status_histories</code>, <code>patient_diagnoses</code>, <code>consents</code>, <code>allergies</code></td>
+</tr>
+<tr>
+<td>Clinical background (7)</td>
+<td><code>serology_results</code>, <code>vaccinations</code>, <code>vascular_accesses</code>, <code>access_events</code>, <code>anthropometry_records</code>, <code>hospitalisations</code>, <code>dry_weights</code></td>
+</tr>
+<tr>
+<td>Prescribing and scheduling (4)</td>
+<td><code>hd_prescriptions</code>, <code>medication_orders</code>, <code>standing_schedules</code>, <code>schedule_exceptions</code></td>
+</tr>
+<tr>
+<td>The treatment record (5)</td>
+<td><code>treatment_sessions</code> (95 columns), <code>session_vitals</code>, <code>session_events</code>, <code>session_notes</code>, <code>medication_administrations</code></td>
+</tr>
+<tr>
+<td>Labs (3)</td>
+<td><code>lab_orders</code>, <code>lab_results</code>, <code>lab_test_refs</code></td>
+</tr>
+<tr>
+<td>Reference lists (3)</td>
+<td><code>diagnosis_refs</code>, <code>event_refs</code>, <code>medication_refs</code></td>
+</tr>
+<tr>
+<td>Machines and water (6)</td>
+<td><code>machines</code>, <code>machine_maintenance_logs</code>, <code>machine_disinfection_logs</code>, <code>water_systems</code>, <code>water_daily_logs</code>, <code>water_quality_tests</code></td>
+</tr>
+<tr>
+<td>Dialyzers and stock (6)</td>
+<td><code>dialyzer_units</code>, <code>dialyzer_reprocess_logs</code>, <code>items</code>, <code>stock_lots</code>, <code>stock_transactions</code>, <code>suppliers</code></td>
+</tr>
+<tr>
+<td>Billing (11)</td>
+<td><code>payers</code>, <code>benefit_programs</code>, <code>benefit_periods</code>, <code>claims</code>, <code>claim_sessions</code>, <code>claim_status_histories</code>, <code>claim_attachments</code>, <code>service_items</code>, <code>invoices</code>, <code>invoice_lines</code>, <code>payments</code></td>
+</tr>
+<tr>
+<td>Audit and sync (4)</td>
+<td><code>audit_logs</code>, <code>record_access_logs</code>, <code>login_events</code>, <code>sync_batches</code></td>
+</tr>
+<tr>
+<td>Added after the baseline (3)</td>
+<td><code>personal_access_tokens</code> (Sanctum), <code>monthly_quality_summaries</code> (the nightly rollup), <code>migrations</code> (Laravel's ledger)</td>
+</tr>
+</tbody>
+</table></div>
+<p>The third migration, <code>2026_08_21_100000_close_lab_result_duplicate_hole</code>, added no table: it gave <code>lab_results</code> a generated <code>timing_key</code> and a new unique key, because the baseline's key included a nullable <code>timing</code> column and MySQL ignores rows with a NULL in a unique key.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Data model"><table>
+<thead>
+<tr>
+<th>View</th>
+<th>What it answers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>v_patient_serology_current</code></td>
+<td>Each patient's latest result per marker</td>
+</tr>
+<tr>
+<td><code>v_patient_cohort</code></td>
+<td>Clean, HBV or HCV, derived from current serology</td>
+</tr>
+<tr>
+<td><code>v_current_prescription</code>, <code>v_current_dry_weight</code></td>
+<td>What is in force today — by MySQL's clock (<code>CURDATE()</code>); services use the session date instead</td>
+</tr>
+<tr>
+<td><code>v_daily_board</code></td>
+<td>The day's sessions with patient, chair, machine, cohort and weights</td>
+</tr>
+<tr>
+<td><code>v_cohort_violation</code></td>
+<td>Detective: anyone seated against their cohort (rules 1, 1b)</td>
+</tr>
+<tr>
+<td><code>v_dialyzer_status</code></td>
+<td>Detective: dialyzers that must not be issued again (rule 8)</td>
+</tr>
+<tr>
+<td><code>v_water_exceptions</code></td>
+<td>Detective: readings over their limits (rule 9) — dated by the UTC day</td>
+</tr>
+<tr>
+<td><code>v_stock_on_hand</code></td>
+<td>Lots with balance and expiry</td>
+</tr>
+<tr>
+<td><code>v_benefit_utilisation</code></td>
+<td>Allotted, claimed and remaining per benefit period</td>
+</tr>
+<tr>
+<td><code>v_monthly_quality</code></td>
+<td>The monthly quality figures — the definition of record, with a <code>LATERAL</code> join so events do not multiply sessions</td>
+</tr>
+<tr>
+<td><code>v_station_utilisation</code></td>
+<td>Chair use over a period</td>
+</tr>
+</tbody>
+</table></div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Data model"><table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Stops</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hd_prescriptions_bi</code>, <code>hd_prescriptions_bu</code></td>
+<td>An overlapping prescription period for a patient</td>
+</tr>
+<tr>
+<td><code>standing_schedules_bi</code></td>
+<td>An overlapping standing pattern (on insert)</td>
+</tr>
+<tr>
+<td><code>treatment_sessions_bu</code></td>
+<td>A change to a locked session's clinical columns, unless <code>@allow_amendment = 1</code></td>
+</tr>
+<tr>
+<td><code>medication_administrations_bi</code></td>
+<td>A high-alert dose given without a witness</td>
+</tr>
+<tr>
+<td><code>stock_transactions_ai</code></td>
+<td>Moves the lot's balance by the movement's quantity — the only thing that does</td>
+</tr>
+</tbody>
+</table></div>
+<p>The 16 stored generated columns: <code>patients.full_name</code>, <code>staff.full_name</code>; <code>treatment_sessions.idwg_kg</code>, <code>weight_loss_kg</code>, <code>actual_duration_min</code>, <code>slot_patient_key</code>, <code>slot_station_key</code>; <code>session_vitals.map_mmhg</code>; <code>dialyzer_units.tcv_pct</code>; <code>hd_prescriptions.effective_to_x</code>, <code>standing_schedules.effective_to_x</code>; <code>invoices.balance</code>, <code>invoice_lines.line_total</code>; <code>patient_diagnoses.one_primary_renal</code>; <code>shifts.is_overnight</code>; and <code>lab_results.timing_key</code>. Each model declares its own in <code>protected array $generated</code>, and <code>ModelIntegrityTest</code> cross-checks the declarations against <code>information_schema</code>.</p>
+<p>Six tables carry a <code>client_uuid</code> with a unique index — <code>treatment_sessions</code>, <code>session_vitals</code>, <code>session_events</code>, <code>session_notes</code>, <code>medication_administrations</code>, <code>stock_transactions</code> — which is what makes an offline operation idempotent. No foreign key cascades a delete into clinical rows, and none can on a column that feeds a generated column.</p>
+<h2 id="modules"><span class="secnum">7</span> Modules</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Modules"><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Owns</th>
+<th>Its services</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core</td>
+<td>Patients, staff, sign-in, settings, the unit's calendar</td>
+<td><code>AuthService</code>, <code>PatientService</code>, <code>SettingsService</code>, <code>FacilityCalendar</code></td>
+</tr>
+<tr>
+<td>Clinical</td>
+<td>The treatment record and everything that feeds it</td>
+<td><code>SessionService</code>, <code>SessionLockService</code>, <code>FlowSheetService</code>, <code>PrescriptionService</code>, <code>CohortGuard</code>, <code>SerologyService</code>, <code>LabService</code>; <code>Adequacy</code></td>
+</tr>
+<tr>
+<td>Ops</td>
+<td>The floor: board, water, machines, dialyzers, stock, reports</td>
+<td><code>SchedulingService</code>, <code>WaterComplianceService</code>, <code>MachineService</code>, <code>DialyzerReuseService</code>, <code>StockService</code>, <code>DetectiveControlReader</code>, <code>QualitySummariser</code></td>
+</tr>
+<tr>
+<td>Billing</td>
+<td>Claims and invoices</td>
+<td><code>BenefitLedger</code>, <code>InvoiceService</code></td>
+</tr>
+<tr>
+<td>Sync</td>
+<td>The offline protocol</td>
+<td><code>SyncBatchProcessor</code> and the <code>session.upsert</code>, <code>vital.append</code>, <code>event.append</code> handlers</td>
+</tr>
+<tr>
+<td>Support</td>
+<td>Cross-cutting machinery</td>
+<td><code>Auditable</code> + <code>AuditObserver</code>, <code>HasGeneratedColumns</code>, <code>BaselineSchema</code>, <code>DomainRuleException</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Controllers are thin: validate with a FormRequest, authorise with a policy, delegate to a service, return a resource. Modules reach each other through services or the query builder — Billing reads <code>treatment_sessions</code> with the query builder and never imports the Clinical model. Six policies are registered explicitly in <code>AppServiceProvider::POLICIES</code>, because Laravel's discovery would find none of them and an undiscovered policy fails open; water and ops work authorise through two gates, <code>water.view</code> and <code>water.record</code>.</p>
+<h2 id="front-end"><span class="secnum">8</span> Front end</h2>
+<p>Five npm workspaces. Both apps are static builds that call <code>/api/v1</code> with relative URLs, so they must be served from the API's origin — there is no CORS configuration.</p>
+<p><strong>Bedside</strong> (<code>apps/bedside</code>) is offline-first. Two local stores, never confused: the <strong>cache</strong> — sessions and reference data from <code>GET sync/bootstrap</code>, replaced wholesale, never a source of truth — and the <strong>outbox</strong>, the only authoritative local state. Charting calls <code>enqueue()</code>, which writes to the outbox and returns; the screen updates from the local copy. The sync loop flushes on the <code>online</code> event and every 30 seconds. A 401 during sync raises <code>auth:reauth-required</code>, keeps the outbox, and replays after the PIN unlock. Check-in, start and end call the API directly and are disabled offline. <code>sync.ts::authHeaders</code> is the one place that builds the bearer and <code>X-Device-Id</code> headers. The service worker in <code>src/sw.ts</code> type-checks but is not in the Vite build.</p>
+<p><strong>Console</strong> (<code>apps/console</code>) is online only, with no router: a section state picks one of seven sections — board, water, patients, claims, invoices, controls, settings — and four detail views: patient, session, claim, invoice.</p>
+<p><strong>Shared packages.</strong> <code>packages/domain</code> holds the clinical maths. <code>packages/api-client</code> holds typed calls and Zod schemas that mirror the API resources, so a changed resource fails loudly in the client instead of rendering <code>undefined</code>. <code>packages/ui</code> holds <code>useConfirm()</code> — the only way either app asks for confirmation — and a test that fails the build if <code>window.confirm</code>, <code>alert</code> or <code>prompt</code> reappear; the hook's result is always named <code>confirmAction</code>, since a bare <code>confirm(</code> is indistinguishable from the native global.</p>
+<h2 id="security"><span class="secnum">9</span> Security</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Security"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>What is in place</th>
+<th>What is not</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sign-in</td>
+<td>Sanctum tokens, 12-hour lifetime; one token per device per person; five failed attempts lock the account for 15 minutes; every attempt, success or failure, written to <code>login_events</code></td>
+<td>No password change or reset in the app; resets are SQL (<a href="admin-guide.html#people">AG·1 §2</a>)</td>
+</tr>
+<tr>
+<td>Tablet PIN</td>
+<td>Six digits; works only on a device where that person has already signed in with a password; throttled; failures count toward the lockout</td>
+<td>No idle auto-lock; the nurse presses Lock</td>
+</tr>
+<tr>
+<td>Device binding</td>
+<td>A token presented from another device is revoked and logged</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Authorisation</td>
+<td>Role-based policies on every route, registered explicitly; settings check <code>admin</code> in every action</td>
+<td>Token abilities are recorded but never checked</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td>Before-and-after rows for changes made through the models of nine record types, and for every settings change; chart views; sign-ins; sync batches</td>
+<td>Writes made with the query builder skip it — claims among them (<a href="#known-defects">§5</a>); so does any direct SQL — hence ROW binary logging and no human write access to the database</td>
+</tr>
+<tr>
+<td>Transport and storage</td>
+<td>HTTPS required by the deployment; <code>APP_DEBUG=false</code> in production</td>
+<td>Tokens live in the browser's <code>localStorage</code>, so a script injected into either app could read them</td>
+</tr>
+<tr>
+<td>Identifiers</td>
+<td>ULIDs for patients, staff and sessions</td>
+<td>Reference rows travel by integer id; sync verdicts carry <code>server_id</code> (<a href="#known-defects">§5</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<p>No independent security review has been done.</p>
+<h2 id="tests"><span class="secnum">10</span> Tests</h2>
+<p>Always on MySQL. SQLite has no triggers here, different generated-column behaviour and looser CHECK semantics, so a green SQLite run would prove nothing about the invariants. <code>phpunit.xml</code> sets <code>DB_CONNECTION=mysql</code> and <code>DB_DATABASE=dialysis_test</code>; <code>TestCase</code> pins the unit's timezone to UTC, and the day-boundary tests move it with <code>unitIn()</code>.</p>
+<pre tabindex="0"><code class="language-bash">cd apps/api
+php artisan test                       # 282 passed, 1,309 assertions on 26 September 2026
+./vendor/bin/pint --test               # passed
+./vendor/bin/phpstan analyse           # level 8, no errors
+cd ../..
+npm test                               # 6 clinical-maths tests, 3 sweep tests
+npm run typecheck                      # five workspaces, clean
+</code></pre>
+<p>The database's own checks need a fresh database, because the smoke test loads fixtures:</p>
+<pre tabindex="0"><code class="language-bash">mysql -u root -e &quot;CREATE DATABASE dialysis_scratch&quot;
+mysql -u root dialysis_scratch &lt; deploy/sql/01-schema.sql       # the baseline without its CREATE DATABASE and USE
+sed 's/^USE dialysis;//' apps/api/database/mysql-seed.sql | mysql -u root dialysis_scratch
+sed 's/^USE dialysis;//' apps/api/database/mysql-smoke-test.sql | mysql -u root dialysis_scratch   # 5 PASS, 0 FAIL
+DB_DATABASE=dialysis_scratch php apps/api/verify/verify_sync.php   # 16 passed, 0 failed
+mysql -u root -e &quot;DROP DATABASE dialysis_scratch&quot;
+</code></pre>
+<p>The seed and the smoke test both open with <code>USE dialysis;</code>. Run them unedited and they write into the development database, whatever database you named on the command line.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Table: Tests"><table>
+<thead>
+<tr>
+<th>Suite</th>
+<th>Tests</th>
+<th>Protects</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BillingTest</td>
+<td>38</td>
+<td>Claims, allotments, the payer lifecycle, remittance</td>
+</tr>
+<tr>
+<td>OpsControlsTest</td>
+<td>30</td>
+<td>Water gate, dialyzer reuse, detective controls</td>
+</tr>
+<tr>
+<td>SessionLifecycleTest</td>
+<td>27</td>
+<td>Check-in to lock, amendment, witness</td>
+</tr>
+<tr>
+<td>InvoicingTest</td>
+<td>21</td>
+<td>Invoices, payments, refunds, void</td>
+</tr>
+<tr>
+<td>LabsTest</td>
+<td>21</td>
+<td>Orders, results, the duplicate hole</td>
+</tr>
+<tr>
+<td>SyncProtocolTest</td>
+<td>19</td>
+<td>Idempotency, partial success, conflicts, the upsert whitelist</td>
+</tr>
+<tr>
+<td>MachineAndStockTest</td>
+<td>19</td>
+<td>Machine status, cohort carry-over, stock movements</td>
+</tr>
+<tr>
+<td>SettingsTest</td>
+<td>14</td>
+<td>Every setting and its refusals</td>
+</tr>
+<tr>
+<td>PatientRegistryTest</td>
+<td>14</td>
+<td>Registration, status history, closed charts</td>
+</tr>
+<tr>
+<td>ClinicalInvariantsTest</td>
+<td>13</td>
+<td>The original invariant set</td>
+</tr>
+<tr>
+<td>SchedulingTest</td>
+<td>12</td>
+<td>Standing patterns and the board</td>
+</tr>
+<tr>
+<td>ReportingTest</td>
+<td>10</td>
+<td>Quality rollup, the event-join regression</td>
+</tr>
+<tr>
+<td>AdequacyTest</td>
+<td>10</td>
+<td>The worked example and its edges</td>
+</tr>
+<tr>
+<td>AuthenticationTest</td>
+<td>9</td>
+<td>Tokens, PIN, lockout, device binding</td>
+</tr>
+<tr>
+<td>AuditingTest</td>
+<td>9</td>
+<td>Audit rows and chart-view logging</td>
+</tr>
+<tr>
+<td>CohortControlTest</td>
+<td>8</td>
+<td>Infection control and the override</td>
+</tr>
+<tr>
+<td>UnitCalendarTest</td>
+<td>6</td>
+<td>The unit's day across timezones</td>
+</tr>
+<tr>
+<td>ModelIntegrityTest</td>
+<td>4</td>
+<td>Every model loads; generated-column declarations match the database</td>
+</tr>
+</tbody>
+</table></div>
+<p>The CI workflow runs all of this on PHP 8.3 and 8.4 against MySQL 8.0, and the client checks on Node 22. <strong>It has never run</strong>, because the project is not a git repository. There is no automated UI test, and the Playwright offline test the design calls for does not exist.</p>
+<h2 id="traps"><span class="secnum">11</span> Conventions and traps</h2>
+<p>Each of these was hit and fixed once. <code>CLAUDE.md</code> has the full list; these are the ones most likely to cost a day.</p>
+<ul>
+<li><strong>Never edit the baseline schema.</strong> Changes are migrations. <code>AppServiceProvider</code> recreates the <code>migrations</code> ledger when the baseline loads (the baseline does not create it), and <code>BaselineSchema</code> strips the baseline's <code>USE dialysis;</code> so the test suite's tables do not land in the development database.</li>
+<li><strong>Every migration needs a SQL twin for production.</strong> The target host has no shell, so <code>php artisan migrate</code> never runs there; <code>deploy/sql/02-post-baseline.sql</code> is the three current migrations as SQL, guarded so it can be re-run. Update the health check's and the pre-flight's expected counts if you add objects.</li>
+<li><strong>Generated columns have two halves.</strong> MySQL rejects a write to one, and the value does not exist on the model until it is read back. Use <code>HasGeneratedColumns</code> and declare <code>$generated</code>.</li>
+<li><strong>No <code>ON DELETE CASCADE</code> or <code>SET NULL</code> on a column that feeds a generated column.</strong> MySQL refuses the foreign key with an unhelpful message.</li>
+<li><strong><code>DATETIME(3)</code>, never <code>TIMESTAMP</code></strong>, and every &quot;today&quot; through <code>FacilityCalendar</code> — never <code>whereDate()</code> on a UTC column, never <code>today()</code> on the application clock.</li>
+<li><strong>A raw query-builder row returns MySQL's naive datetime text</strong>, which a browser reads as local time. Convert to ISO 8601 before it leaves the server.</li>
+<li><strong>A nullable column in a unique key constrains nothing.</strong> Use a stored generated column that coalesces to a sentinel.</li>
+<li><strong><code>information_schema</code> columns come back uppercased.</strong> Alias them.</li>
+<li><strong>A public id must be a real ULID</strong> — Crockford base32 excludes I, L, O and U — or route binding returns 404 before it queries.</li>
+<li><strong>PHP's array <code>+</code> keeps the left operand.</strong> Server-derived values go on the left so they win.</li>
+<li><strong>Laravel treats <code>[]</code> as empty.</strong> An array that may legitimately be empty is validated <code>present</code>, not <code>required</code>.</li>
+<li><strong>bcmath treats a non-numeric string as zero.</strong> Validate before adding, or an invoice line is priced at nothing.</li>
+<li><strong>Never join <code>session_events</code> straight into an aggregate over sessions</strong>; it multiplies rows. Use the <code>LATERAL</code> subquery in <code>v_monthly_quality</code>.</li>
+<li><strong>Never compute a summary a second way.</strong> The quality report's figures come from <code>v_monthly_quality</code> through the nightly rollup, and nowhere else.</li>
+<li><strong>Every new sync operation type needs a registered handler and a <code>client_uuid</code> unique index</strong> on its table; an unregistered type comes back <code>rejected</code> as &quot;Unknown operation type&quot;.</li>
+<li><strong><code>Model::preventLazyLoading()</code> is on outside production.</strong> Eager-load explicitly.</li>
+<li><strong>A flaky test is a bug.</strong> Chase it.</li>
+</ul>
+</article>
+<footer class="doc-foot"><p class="doc-foot-ref"><span>TS·1</span> Technical specification · Issue 1 · 26 September 2026</p><p>Generated by <code>docs/build.php</code> from <code>docs/src/technical-spec.md</code>. Edit the source and rebuild; a change made to this file is overwritten by the next build. <a href="index.html#rebuild">How to rebuild the set</a>.</p></footer>
+</main>
+</div>
+</body>
+</html>

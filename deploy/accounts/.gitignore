@@ -1,0 +1,4 @@
+# Plaintext passwords and PINs, as .txt and as printable .html. They never
+# belong in a repository, a backup of the source tree, or on the server.
+CREDENTIALS*
+out/
